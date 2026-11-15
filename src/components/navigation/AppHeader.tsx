@@ -13,20 +13,23 @@ import {
 } from 'lucide-react';
 import { NotificationsPopover } from '../common/NotificationsPopover';
 import { AgeGateModal } from '../safety/AgeGateModal';
-import { DEMO_CURRENT_USER, DEMO_ADMIN_USER } from '@/data/seedData';
+import { UserPlus, LogOut } from 'lucide-react';
 
 interface AppHeaderProps {
   onNavigateToTab: (tab: string) => void;
+  onOpenRegister?: () => void;
 }
 
-export const AppHeader: React.FC<AppHeaderProps> = ({ onNavigateToTab }) => {
+export const AppHeader: React.FC<AppHeaderProps> = ({ onNavigateToTab, onOpenRegister }) => {
   const {
     currentUser,
+    allProfiles,
     mode,
     isDarkMode,
     toggleDarkMode,
     unreadNotificationsCount,
     loginAs,
+    logout,
   } = useApp();
 
   const [notifOpen, setNotifOpen] = useState(false);
@@ -118,47 +121,68 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ onNavigateToTab }) => {
                 </button>
 
                 {userDropdownOpen && (
-                  <div className="absolute right-0 top-11 w-52 bg-white dark:bg-[#1E1D2A] rounded-2xl shadow-xl border border-gray-100 dark:border-gray-800 p-2 z-50 text-xs">
+                  <div className="absolute right-0 top-11 w-56 bg-white dark:bg-[#1E1D2A] rounded-2xl shadow-xl border border-gray-100 dark:border-gray-800 p-2 z-50 text-xs">
                     <span className="text-[10px] uppercase font-bold text-[#8A8994] px-2 py-1 block">
-                      Switch Active Account
+                      บัญชีบนอุปกรณ์นี้ ({allProfiles.length})
                     </span>
-                    <button
-                      onClick={() => {
-                        loginAs(DEMO_CURRENT_USER);
-                        setUserDropdownOpen(false);
-                      }}
-                      className="w-full p-2 rounded-xl text-left hover:bg-gray-50 dark:hover:bg-[#282737] flex items-center gap-2"
-                    >
-                      <img
-                        src={DEMO_CURRENT_USER.avatar_url}
-                        alt="Phukao"
-                        className="w-6 h-6 rounded-full object-cover"
-                      />
-                      <div className="min-w-0">
-                        <span className="font-bold truncate block">Phukao (Student)</span>
-                        <span className="text-[10px] text-[#8A8994]">Discovery & Chat</span>
-                      </div>
-                    </button>
 
-                    <button
-                      onClick={() => {
-                        loginAs(DEMO_ADMIN_USER);
-                        setUserDropdownOpen(false);
-                      }}
-                      className="w-full p-2 rounded-xl text-left hover:bg-gray-50 dark:hover:bg-[#282737] flex items-center gap-2"
-                    >
-                      <img
-                        src={DEMO_ADMIN_USER.avatar_url}
-                        alt="Admin"
-                        className="w-6 h-6 rounded-full object-cover"
-                      />
-                      <div className="min-w-0">
-                        <span className="font-bold text-emerald-600 dark:text-emerald-400 truncate block">
-                          Kru Wittaya (Admin)
-                        </span>
-                        <span className="text-[10px] text-[#8A8994]">Moderation Console</span>
-                      </div>
-                    </button>
+                    <div className="max-h-48 overflow-y-auto space-y-1">
+                      {allProfiles.map((p) => {
+                        const isCurrent = p.id === currentUser.id;
+                        return (
+                          <button
+                            key={p.id}
+                            onClick={() => {
+                              loginAs(p);
+                              setUserDropdownOpen(false);
+                            }}
+                            className={`w-full p-2 rounded-xl text-left flex items-center gap-2 transition ${
+                              isCurrent
+                                ? 'bg-[#FFEBF0] dark:bg-[#281822] text-[#FF526B] font-bold'
+                                : 'hover:bg-gray-50 dark:hover:bg-[#282737]'
+                            }`}
+                          >
+                            <img
+                              src={p.avatar_url || p.photos[0]?.url}
+                              alt={p.display_name}
+                              className="w-6 h-6 rounded-full object-cover shrink-0"
+                            />
+                            <div className="min-w-0 flex-1">
+                              <span className="truncate block">{p.display_name}</span>
+                              <span className="text-[10px] text-[#8A8994] truncate block">
+                                {p.school_department}
+                              </span>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <div className="pt-2 mt-1 border-t border-gray-100 dark:border-gray-800 space-y-1">
+                      {onOpenRegister && (
+                        <button
+                          onClick={() => {
+                            setUserDropdownOpen(false);
+                            onOpenRegister();
+                          }}
+                          className="w-full p-2 rounded-xl text-left hover:bg-gray-50 dark:hover:bg-[#282737] flex items-center gap-2 font-semibold text-[#FF526B]"
+                        >
+                          <UserPlus className="w-3.5 h-3.5" />
+                          <span>+ สร้างบัญชีอื่นในเครื่องนี้</span>
+                        </button>
+                      )}
+
+                      <button
+                        onClick={() => {
+                          setUserDropdownOpen(false);
+                          logout();
+                        }}
+                        className="w-full p-2 rounded-xl text-left hover:bg-red-50 dark:hover:bg-red-950/30 flex items-center gap-2 text-red-500 font-semibold"
+                      >
+                        <LogOut className="w-3.5 h-3.5" />
+                        <span>ออกจากระบบ</span>
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>

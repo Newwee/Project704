@@ -7,7 +7,6 @@ import {
   Heart,
   MessageCircle,
   User,
-  ShieldAlert,
   LogOut,
 } from 'lucide-react';
 
@@ -51,15 +50,6 @@ export const DesktopSidebar: React.FC<DesktopSidebarProps> = ({
       icon: <User className="w-5 h-5" />,
     },
   ];
-
-  if (currentUser?.is_admin) {
-    navItems.push({
-      id: 'admin',
-      label: 'แผงผู้ดูแล (Admin Console)',
-      icon: <ShieldAlert className="w-5 h-5 text-rose-500" />,
-      badge: undefined,
-    });
-  }
 
   return (
     <aside className="hidden lg:flex flex-col w-64 border-r border-[#F2E3E6] dark:border-[#2C2B3C] bg-white dark:bg-[#161520] p-4 shrink-0 justify-between select-none">

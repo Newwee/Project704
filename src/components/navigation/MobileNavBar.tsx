@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useApp } from '@/context/AppContext';
-import { Flame, Heart, MessageCircle, User, ShieldAlert } from 'lucide-react';
+import { Flame, Heart, MessageCircle, User } from 'lucide-react';
 
 interface MobileNavBarProps {
   currentTab: string;
@@ -13,7 +13,7 @@ export const MobileNavBar: React.FC<MobileNavBarProps> = ({
   currentTab,
   onSelectTab,
 }) => {
-  const { currentUser, likedByUsers, conversations } = useApp();
+  const { likedByUsers, conversations } = useApp();
 
   const unreadMessagesCount = conversations.reduce(
     (acc, curr) => acc + (curr.unread_count || 0),
@@ -44,15 +44,6 @@ export const MobileNavBar: React.FC<MobileNavBarProps> = ({
       icon: <User className="w-5 h-5" />,
     },
   ];
-
-  if (currentUser?.is_admin) {
-    navItems.push({
-      id: 'admin',
-      label: 'Admin',
-      icon: <ShieldAlert className="w-5 h-5" />,
-      badge: undefined,
-    });
-  }
 
   return (
     <nav className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 dark:bg-[#161520]/95 backdrop-blur-md border-t border-[#F2E3E6] dark:border-[#2C2B3C] px-2 py-2 safe-bottom shadow-lg select-none">

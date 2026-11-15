@@ -13,11 +13,6 @@ import {
   ReportItem,
   BlockItem,
 } from '@/types';
-import {
-  INITIAL_PROFILES,
-  DEMO_CURRENT_USER,
-} from '@/data/seedData';
-import { filterAndRankDiscovery } from '@/lib/recommendation';
 import confetti from 'canvas-confetti';
 
 interface AppContextType {
@@ -41,6 +36,8 @@ interface AppContextType {
   dismissMatchCelebration: () => void;
   
   // Actions
+  registerUser: (newUser: UserProfile) => void;
+  loginUser: (email: string) => boolean;
   loginAs: (user: UserProfile) => void;
   logout: () => void;
   swipe: (targetUserId: string, action: SwipeAction) => Promise<{ isMatch: boolean; match?: MatchItem }>;
@@ -59,25 +56,27 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 const STORAGE_KEYS = {
-  CURRENT_USER: 'nmr_current_user',
-  ALL_PROFILES: 'nmr_all_profiles',
-  SWIPES: 'nmr_swipes',
-  MATCHES: 'nmr_matches',
-  CONVERSATIONS: 'nmr_conversations',
-  MESSAGES: 'nmr_messages',
-  NOTIFICATIONS: 'nmr_notifications',
-  BLOCKS: 'nmr_blocks',
-  REPORTS: 'nmr_reports',
-  DARK_MODE: 'nmr_dark_mode',
-  MODE: 'nmr_app_mode',
+  CURRENT_USER: 'nmr_current_user_v2',
+  ALL_PROFILES: 'nmr_all_profiles_v2',
+  SWIPES: 'nmr_swipes_v2',
+  MATCHES: 'nmr_matches_v2',
+  CONVERSATIONS: 'nmr_conversations_v2',
+  MESSAGES: 'nmr_messages_v2',
+  NOTIFICATIONS: 'nmr_notifications_v2',
+  BLOCKS: 'nmr_blocks_v2',
+  REPORTS: 'nmr_reports_v2',
+  DARK_MODE: 'nmr_dark_mode_v2',
+  MODE: 'nmr_app_mode_v2',
 };
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isClient, setIsClient] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [mode, setMode] = useState<AppMode>('CAMPUS_FRIENDS');
-  const [currentUser, setCurrentUser] = useState<UserProfile | null>(DEMO_CURRENT_USER);
-  const [allProfiles, setAllProfiles] = useState<UserProfile[]>(INITIAL_PROFILES);
+  
+  // Starts completely clean (0 users)
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
+  const [allProfiles, setAllProfiles] = useState<UserProfile[]>([]);
   const [swipes, setSwipes] = useState<Record<string, SwipeAction>>({});
   const [matches, setMatches] = useState<MatchItem[]>([]);
   const [conversations, setConversations] = useState<ConversationItem[]>([]);
@@ -87,7 +86,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [reports, setReports] = useState<ReportItem[]>([]);
   const [latestMatchCelebration, setLatestMatchCelebration] = useState<MatchItem | null>(null);
 
-  // Initialize data on mount
+  // Cycling Discovery Queue (re-circulates profiles in an infinite loop)
+  const [discoveryQueue, setDiscoveryQueue] = useState<UserProfile[]>([]);
+
+  // Initialize data on mount from localStorage (v2 clean keys)
   useEffect(() => {
     setIsClient(true);
     try {
@@ -99,11 +101,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         else document.documentElement.classList.remove('dark');
       }
 
-      const savedUser = localStorage.getItem(STORAGE_KEYS.CURRENT_USER);
-      if (savedUser) setCurrentUser(JSON.parse(savedUser));
-
       const savedProfiles = localStorage.getItem(STORAGE_KEYS.ALL_PROFILES);
-      if (savedProfiles) setAllProfiles(JSON.parse(savedProfiles));
+      if (savedProfiles) {
+        const parsedProfiles: UserProfile[] = JSON.parse(savedProfiles);
+        setAllProfiles(parsedProfiles);
+
+        const savedUser = localStorage.getItem(STORAGE_KEYS.CURRENT_USER);
+        if (savedUser) {
+          const parsedUser = JSON.parse(savedUser);
+          // verify user still exists in allProfiles
+          const active = parsedProfiles.find((p) => p.id === parsedUser.id) || parsedUser;
+          setCurrentUser(active);
+        }
+      }
 
       const savedSwipes = localStorage.getItem(STORAGE_KEYS.SWIPES);
       if (savedSwipes) setSwipes(JSON.parse(savedSwipes));
@@ -125,93 +135,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       const savedReports = localStorage.getItem(STORAGE_KEYS.REPORTS);
       if (savedReports) setReports(JSON.parse(savedReports));
-
-      // If no matches yet, initialize an active initial match with Linnie
-      if (!savedMatches || JSON.parse(savedMatches).length === 0) {
-        const linnie = INITIAL_PROFILES.find((p) => p.id === 'user-lin');
-        if (linnie) {
-          const initMatchId = 'match-linnie-phukao';
-          const initConvoId = 'convo-linnie-phukao';
-          const initMatch: MatchItem = {
-            id: initMatchId,
-            user1_id: DEMO_CURRENT_USER.id,
-            user2_id: linnie.id,
-            matched_at: new Date(Date.now() - 3600000 * 2).toISOString(),
-            is_active: true,
-            other_user: linnie,
-            last_message: 'สวัสดีจ้าภูเขา บ่ายนี้มีสรุปชีวะไหม?',
-            last_message_at: new Date(Date.now() - 3600000).toISOString(),
-          };
-
-          const initConvo: ConversationItem = {
-            id: initConvoId,
-            match_id: initMatchId,
-            other_user: linnie,
-            last_message_text: 'สวัสดีจ้าภูเขา บ่ายนี้มีสรุปชีวะไหม?',
-            last_message_at: new Date(Date.now() - 3600000).toISOString(),
-            unread_count: 1,
-          };
-
-          const initMsgList: MessageItem[] = [
-            {
-              id: 'msg-1',
-              conversation_id: initConvoId,
-              sender_id: linnie.id,
-              text: 'ยินดีที่ได้รู้จักนะภูเขา! สนใจบอร์ดเกมเหมือนกันเลย 😊',
-              is_read: true,
-              created_at: new Date(Date.now() - 3600000 * 2).toISOString(),
-            },
-            {
-              id: 'msg-2',
-              conversation_id: initConvoId,
-              sender_id: DEMO_CURRENT_USER.id,
-              text: 'ยินดีที่ได้รู้จักครับหลิน! ปกติเล่นเกมไหนบ่อยสุดเหรอครับ?',
-              is_read: true,
-              created_at: new Date(Date.now() - 3600000 * 1.5).toISOString(),
-            },
-            {
-              id: 'msg-3',
-              conversation_id: initConvoId,
-              sender_id: linnie.id,
-              text: 'สวัสดีจ้าภูเขา บ่ายนี้มีสรุปชีวะไหม?',
-              is_read: false,
-              created_at: new Date(Date.now() - 3600000).toISOString(),
-            },
-          ];
-
-          const initNotifs: NotificationItem[] = [
-            {
-              id: 'notif-1',
-              user_id: DEMO_CURRENT_USER.id,
-              sender_id: linnie.id,
-              sender_profile: linnie,
-              type: 'match',
-              title: "It's a Match! 🎉",
-              body: 'คุณและ Linnie แมตช์กันแล้ว เริ่มคุยกันได้เลย',
-              link: `/chat?convo=${initConvoId}`,
-              is_read: false,
-              created_at: new Date(Date.now() - 3600000 * 2).toISOString(),
-            },
-            {
-              id: 'notif-2',
-              user_id: DEMO_CURRENT_USER.id,
-              sender_id: 'user-mina',
-              sender_profile: INITIAL_PROFILES.find((p) => p.id === 'user-mina'),
-              type: 'like',
-              title: 'มีคนกด Like โปรไฟล์คุณ! ✨',
-              body: 'Mina กดถูกใจคุณ เข้าไปดูในแท็บ Likes ได้เลย',
-              link: '/likes',
-              is_read: false,
-              created_at: new Date(Date.now() - 1800000).toISOString(),
-            },
-          ];
-
-          setMatches([initMatch]);
-          setConversations([initConvo]);
-          setMessages({ [initConvoId]: initMsgList });
-          setNotifications(initNotifs);
-        }
-      }
     } catch (err) {
       console.error('Storage init error:', err);
     }
@@ -222,7 +145,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (!isClient) return;
     try {
       localStorage.setItem(STORAGE_KEYS.DARK_MODE, String(isDarkMode));
-      if (currentUser) localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(currentUser));
+      if (currentUser) {
+        localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(currentUser));
+      } else {
+        localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
+      }
       localStorage.setItem(STORAGE_KEYS.ALL_PROFILES, JSON.stringify(allProfiles));
       localStorage.setItem(STORAGE_KEYS.SWIPES, JSON.stringify(swipes));
       localStorage.setItem(STORAGE_KEYS.MATCHES, JSON.stringify(matches));
@@ -248,6 +175,36 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     reports,
   ]);
 
+  // Keep Discovery Queue populated & synced with available candidates (excluding self and blocks)
+  useEffect(() => {
+    if (!currentUser) {
+      setDiscoveryQueue([]);
+      return;
+    }
+
+    const blockedUserIds = new Set(blocks.map((b) => b.blocked_id));
+    const candidates = allProfiles.filter(
+      (p) => p.id !== currentUser.id && !blockedUserIds.has(p.id) && !p.is_banned && !p.is_suspended && !p.is_hidden
+    );
+
+    if (candidates.length === 0) {
+      setDiscoveryQueue([]);
+      return;
+    }
+
+    // If queue is empty or has mismatched profiles, initialize it
+    setDiscoveryQueue((prevQueue) => {
+      if (prevQueue.length === 0) {
+        return candidates;
+      }
+      // Keep existing ordering, ensure all valid candidates exist
+      const existingIds = new Set(prevQueue.map((p) => p.id));
+      const newAdditions = candidates.filter((c) => !existingIds.has(c.id));
+      const stillValid = prevQueue.filter((p) => candidates.some((c) => c.id === p.id));
+      return [...stillValid, ...newAdditions];
+    });
+  }, [currentUser, allProfiles, blocks]);
+
   const toggleDarkMode = () => {
     setIsDarkMode((prev) => {
       const next = !prev;
@@ -262,7 +219,32 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (currentUser) {
       const updated = { ...currentUser, mode: newMode };
       setCurrentUser(updated);
+      setAllProfiles((prev) => prev.map((p) => (p.id === currentUser.id ? updated : p)));
     }
+  };
+
+  const registerUser = (newUser: UserProfile) => {
+    setAllProfiles((prev) => {
+      const exists = prev.some((p) => p.id === newUser.id || (newUser.email && p.email === newUser.email));
+      if (exists) {
+        return prev.map((p) => (p.id === newUser.id ? newUser : p));
+      }
+      return [...prev, newUser];
+    });
+    setCurrentUser(newUser);
+    setMode(newUser.mode);
+  };
+
+  const loginUser = (email: string): boolean => {
+    const found = allProfiles.find(
+      (p) => p.email?.toLowerCase().trim() === email.toLowerCase().trim()
+    );
+    if (found) {
+      setCurrentUser(found);
+      setMode(found.mode);
+      return true;
+    }
+    return false;
   };
 
   const loginAs = (user: UserProfile) => {
@@ -274,107 +256,123 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setCurrentUser(null);
   };
 
-  // Swiped set for fast lookup
-  const swipedUserIds = new Set(Object.keys(swipes));
-  const blockedUserIds = new Set(blocks.map((b) => b.blocked_id));
-
-  // Compute filtered & ranked discovery profiles
-  const discoveryProfiles = currentUser
-    ? filterAndRankDiscovery(currentUser, allProfiles, swipedUserIds, blockedUserIds)
+  // Who liked current user:
+  // Find profiles where swipes["${p.id}->${currentUser.id}"] === 'like' | 'superlike'
+  // and current user hasn't matched with them yet
+  const likedByUsers = currentUser
+    ? allProfiles.filter((p) => {
+        if (p.id === currentUser.id) return false;
+        const key = `${p.id}->${currentUser.id}`;
+        const hasLikedMe = swipes[key] === 'like' || swipes[key] === 'superlike';
+        if (!hasLikedMe) return false;
+        // Check if already matched
+        const alreadyMatched = matches.some(
+          (m) =>
+            (m.user1_id === currentUser.id && m.user2_id === p.id) ||
+            (m.user1_id === p.id && m.user2_id === currentUser.id)
+        );
+        return !alreadyMatched;
+      })
     : [];
 
-  // Users who liked the current user (e.g. Mina pre-likes Phukao!)
-  const likedByUsers = allProfiles.filter((p) => {
-    if (p.id === currentUser?.id) return false;
-    if (swipes[p.id]) return false; // already resolved by current user
-    if (blockedUserIds.has(p.id)) return false;
-    // Mina and Ploy have liked Phukao by default
-    return p.id === 'user-mina' || p.id === 'user-ploy';
-  });
+  // Discovery Profiles = the cycling discovery queue
+  const discoveryProfiles = discoveryQueue;
 
-  // Swipe Action with atomic matching
+  // Swipe Action with infinite loop and atomic mutual matching
   const swipe = async (targetUserId: string, action: SwipeAction) => {
     if (!currentUser) return { isMatch: false };
 
-    // Record swipe
-    setSwipes((prev) => ({ ...prev, [targetUserId]: action }));
+    const swipeKey = `${currentUser.id}->${targetUserId}`;
+    setSwipes((prev) => ({ ...prev, [swipeKey]: action }));
 
     const targetUser = allProfiles.find((p) => p.id === targetUserId);
     if (!targetUser) return { isMatch: false };
 
-    // Check if targetUser liked currentUser
-    // (Mina and Ploy like Phukao)
+    // Infinite loop: pop front card, put it at the end of the queue so it recycles forever!
+    setDiscoveryQueue((prev) => {
+      if (prev.length <= 1) return prev;
+      const front = prev[0];
+      const rest = prev.slice(1);
+      return [...rest, front];
+    });
+
+    // Check if other user swiped like/superlike on current user
+    const reciprocalKey = `${targetUserId}->${currentUser.id}`;
     const isTargetLikingCurrent =
-      targetUserId === 'user-mina' ||
-      targetUserId === 'user-ploy' ||
-      targetUser.id.startsWith('like-back-');
+      swipes[reciprocalKey] === 'like' || swipes[reciprocalKey] === 'superlike';
 
     if ((action === 'like' || action === 'superlike') && isTargetLikingCurrent) {
-      // It's a MATCH!
-      const matchId = `match-${currentUser.id}-${targetUserId}-${Date.now()}`;
+      // It's a REAL MATCH!
+      const u1 = [currentUser.id, targetUserId].sort()[0];
+      const u2 = [currentUser.id, targetUserId].sort()[1];
+      const matchId = `match-${u1}-${u2}`;
       const convoId = `convo-${matchId}`;
 
-      const newMatch: MatchItem = {
-        id: matchId,
-        user1_id: currentUser.id,
-        user2_id: targetUserId,
-        matched_at: new Date().toISOString(),
-        is_active: true,
-        other_user: targetUser,
-        last_message: 'แมตช์ใหม่! ทักทายกันได้เลย ✨',
-        last_message_at: new Date().toISOString(),
-      };
+      // Check if match already exists
+      const existingMatch = matches.find((m) => m.id === matchId);
+      if (!existingMatch) {
+        const newMatch: MatchItem = {
+          id: matchId,
+          user1_id: u1,
+          user2_id: u2,
+          matched_at: new Date().toISOString(),
+          is_active: true,
+          other_user: targetUser,
+          last_message: 'แมตช์ใหม่! ทักทายกันได้เลย ✨',
+          last_message_at: new Date().toISOString(),
+        };
 
-      const newConvo: ConversationItem = {
-        id: convoId,
-        match_id: matchId,
-        other_user: targetUser,
-        last_message_text: 'แมตช์ใหม่! ทักทายกันได้เลย ✨',
-        last_message_at: new Date().toISOString(),
-        unread_count: 0,
-      };
+        const newConvo: ConversationItem = {
+          id: convoId,
+          match_id: matchId,
+          other_user: targetUser,
+          last_message_text: 'แมตช์ใหม่! ทักทายกันได้เลย ✨',
+          last_message_at: new Date().toISOString(),
+          unread_count: 0,
+        };
 
-      const welcomeMsg: MessageItem = {
-        id: `msg-${Date.now()}`,
-        conversation_id: convoId,
-        sender_id: targetUserId,
-        text: `เย้! แมตช์กันแล้วนะ ${currentUser.display_name} ยินดีที่ได้รู้จักครับ/ค่ะ! 🎉`,
-        is_read: false,
-        created_at: new Date().toISOString(),
-      };
+        const welcomeMsg: MessageItem = {
+          id: `msg-${Date.now()}`,
+          conversation_id: convoId,
+          sender_id: targetUserId,
+          text: `สวัสดีครับ/ค่ะ! ยินดีที่ได้แมตช์กันนะ 🎉`,
+          is_read: false,
+          created_at: new Date().toISOString(),
+        };
 
-      const newNotif: NotificationItem = {
-        id: `notif-${Date.now()}`,
-        user_id: currentUser.id,
-        sender_id: targetUserId,
-        sender_profile: targetUser,
-        type: 'match',
-        title: "It's a Match! 🎉",
-        body: `คุณและ ${targetUser.display_name} แมตช์กันแล้ว!`,
-        link: `/chat?convo=${convoId}`,
-        is_read: false,
-        created_at: new Date().toISOString(),
-      };
+        const newNotif: NotificationItem = {
+          id: `notif-${Date.now()}`,
+          user_id: currentUser.id,
+          sender_id: targetUserId,
+          sender_profile: targetUser,
+          type: 'match',
+          title: "It's a Match! 🎉",
+          body: `คุณและ ${targetUser.display_name} แมตช์กันแล้ว!`,
+          link: `/chat?convo=${convoId}`,
+          is_read: false,
+          created_at: new Date().toISOString(),
+        };
 
-      setMatches((prev) => [newMatch, ...prev]);
-      setConversations((prev) => [newConvo, ...prev]);
-      setMessages((prev) => ({ ...prev, [convoId]: [welcomeMsg] }));
-      setNotifications((prev) => [newNotif, ...prev]);
-      setLatestMatchCelebration(newMatch);
+        setMatches((prev) => [newMatch, ...prev]);
+        setConversations((prev) => [newConvo, ...prev]);
+        setMessages((prev) => ({ ...prev, [convoId]: [welcomeMsg] }));
+        setNotifications((prev) => [newNotif, ...prev]);
+        setLatestMatchCelebration(newMatch);
 
-      // Trigger Confetti!
-      try {
-        confetti({
-          particleCount: 80,
-          spread: 70,
-          origin: { y: 0.6 },
-          colors: ['#FF416C', '#FF526B', '#FF7A85', '#FFD166'],
-        });
-      } catch {
-        // gracefully handle SSR / non-canvas
+        // Confetti Celebration!
+        try {
+          confetti({
+            particleCount: 80,
+            spread: 70,
+            origin: { y: 0.6 },
+            colors: ['#FF416C', '#FF526B', '#FF7A85', '#FFD166'],
+          });
+        } catch {
+          // safe
+        }
+
+        return { isMatch: true, match: newMatch };
       }
-
-      return { isMatch: true, match: newMatch };
     }
 
     return { isMatch: false };
@@ -384,7 +382,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setLatestMatchCelebration(null);
   };
 
-  // Real-time Chat: Send message with simulated typing reply
+  // Real Chat message saving & history persistence
   const sendMessage = (conversationId: string, text: string, imageUrl?: string) => {
     if (!currentUser || !text.trim()) return;
 
@@ -403,7 +401,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       [conversationId]: [...(prev[conversationId] || []), newMsg],
     }));
 
-    // Update conversation last message
+    // Update conversation last message & timestamp
     setConversations((prev) =>
       prev.map((c) =>
         c.id === conversationId
@@ -415,47 +413,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           : c
       )
     );
-
-    // Realistic reply simulation after 2.5 seconds
-    const convo = conversations.find((c) => c.id === conversationId);
-    if (convo) {
-      setTimeout(() => {
-        const replies = [
-          'จริงด้วย เห็นด้วยเลย!',
-          'ว้าว สุดยอดเลย ไว้มาคุยกันต่อนะ',
-          'ยินดีมาก ๆ เลยครับ/ค่ะ 😊',
-          'วันนี้เลิกเรียนแล้วทำอะไรต่อเหรอ?',
-          'ชอบมากเลย!',
-        ];
-        const randomReply = replies[Math.floor(Math.random() * replies.length)];
-        const replyMsg: MessageItem = {
-          id: `msg-reply-${Date.now()}`,
-          conversation_id: conversationId,
-          sender_id: convo.other_user.id,
-          text: randomReply,
-          is_read: false,
-          created_at: new Date().toISOString(),
-        };
-
-        setMessages((prev) => ({
-          ...prev,
-          [conversationId]: [...(prev[conversationId] || []), replyMsg],
-        }));
-
-        setConversations((prev) =>
-          prev.map((c) =>
-            c.id === conversationId
-              ? {
-                  ...c,
-                  last_message_text: randomReply,
-                  last_message_at: new Date().toISOString(),
-                  unread_count: c.unread_count + 1,
-                }
-              : c
-          )
-        );
-      }, 2500);
-    }
   };
 
   const unmatch = (matchId: string) => {
@@ -473,13 +430,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       created_at: new Date().toISOString(),
     };
     setBlocks((prev) => [...prev, newBlock]);
-    // Also remove matches and convos
     setMatches((prev) =>
       prev.filter((m) => m.user1_id !== targetUserId && m.user2_id !== targetUserId)
     );
     setConversations((prev) =>
       prev.filter((c) => c.other_user.id !== targetUserId)
     );
+    setDiscoveryQueue((prev) => prev.filter((p) => p.id !== targetUserId));
   };
 
   const reportUser = (targetUserId: string, category: ReportCategory, details: string) => {
@@ -539,9 +496,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const resetAllData = () => {
-    localStorage.clear();
-    setCurrentUser(DEMO_CURRENT_USER);
-    setAllProfiles(INITIAL_PROFILES);
+    Object.values(STORAGE_KEYS).forEach((k) => localStorage.removeItem(k));
+    setCurrentUser(null);
+    setAllProfiles([]);
     setSwipes({});
     setMatches([]);
     setConversations([]);
@@ -549,20 +506,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setNotifications([]);
     setBlocks([]);
     setReports([]);
+    setDiscoveryQueue([]);
     window.location.reload();
   };
 
   const refreshDiscovery = () => {
-    // Clears pass swipes to re-explore
-    setSwipes((prev) => {
-      const next: Record<string, SwipeAction> = {};
-      Object.entries(prev).forEach(([key, val]) => {
-        if (val === 'like' || val === 'superlike') {
-          next[key] = val;
-        }
-      });
-      return next;
-    });
+    if (!currentUser) return;
+    const blockedUserIds = new Set(blocks.map((b) => b.blocked_id));
+    const candidates = allProfiles.filter(
+      (p) => p.id !== currentUser.id && !blockedUserIds.has(p.id)
+    );
+    setDiscoveryQueue(candidates);
   };
 
   const unreadNotificationsCount = notifications.filter((n) => !n.is_read).length;
@@ -588,6 +542,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         allProfiles,
         latestMatchCelebration,
         dismissMatchCelebration,
+        registerUser,
+        loginUser,
         loginAs,
         logout,
         swipe,

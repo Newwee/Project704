@@ -9,39 +9,57 @@ import {
   GraduationCap,
   Plus,
   Trash2,
+  AlertCircle,
+  Camera,
+  Mail,
+  User,
 } from 'lucide-react';
 import { MASTER_INTERESTS } from '@/data/seedData';
-import { Gender, ProfilePhoto } from '@/types';
+import { Gender, ProfilePhoto, UserProfile } from '@/types';
 import { Logo } from '../common/Logo';
 
 interface OnboardingFlowProps {
   onComplete: () => void;
+  onCancel?: () => void;
 }
 
-export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
-  const { currentUser, updateProfile } = useApp();
+export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete, onCancel }) => {
+  const { registerUser } = useApp();
 
   const [step, setStep] = useState(1);
-  const [displayName, setDisplayName] = useState(currentUser?.display_name || '');
-  const [birthdate, setBirthdate] = useState(currentUser?.birthdate || '2008-05-15');
-  const [gender, setGender] = useState<Gender>(currentUser?.gender || 'male');
-  const [department, setDepartment] = useState(currentUser?.school_department || 'วิทย์-คอมพิวเตอร์');
-  const [bio, setBio] = useState(currentUser?.bio || '');
-  const [photos, setPhotos] = useState<ProfilePhoto[]>(currentUser?.photos || []);
-  const [selectedInterests, setSelectedInterests] = useState(currentUser?.interests || []);
+  const [email, setEmail] = useState('');
+  const [displayName, setDisplayName] = useState('');
+  const [birthdate, setBirthdate] = useState('2008-05-15');
+  const [gender, setGender] = useState<Gender>('female');
+  const [department, setDepartment] = useState('วิทย์-คณิต');
+  const [bio, setBio] = useState('');
+  const [photos, setPhotos] = useState<ProfilePhoto[]>([]);
+  const [selectedInterests, setSelectedInterests] = useState<typeof MASTER_INTERESTS>([]);
   const [preferredGender, setPreferredGender] = useState<'all' | 'male' | 'female' | 'non-binary'>('all');
+  const [errorMsg, setErrorMsg] = useState('');
 
   const totalSteps = 5;
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      setErrorMsg('กรุณาเลือกไฟล์รูปภาพที่ถูกต้อง (JPEG, PNG, WebP)');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setErrorMsg('ขนาดไฟล์รูปภาพต้องไม่เกิน 5MB');
+      return;
+    }
+
+    setErrorMsg('');
     const reader = new FileReader();
     reader.onload = () => {
       const result = reader.result as string;
       const newPhoto: ProfilePhoto = {
         id: `photo-${Date.now()}`,
-        user_id: currentUser?.id || 'new-user',
+        user_id: 'new-user',
         url: result,
         order_index: photos.length,
         is_primary: photos.length === 0,
@@ -60,20 +78,64 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) =>
     }
   };
 
-  const handleFinalSubmit = () => {
-    // Calculate age from birthdate
-    const birthYear = new Date(birthdate).getFullYear();
-    const age = new Date().getFullYear() - birthYear;
+  const validateCurrentStep = (): boolean => {
+    setErrorMsg('');
+    if (step === 1) {
+      if (!displayName.trim()) {
+        setErrorMsg('กรุณาระบุชื่อที่ต้องการให้แสดง');
+        return false;
+      }
+      if (!department.trim()) {
+        setErrorMsg('กรุณาระบุแผนการเรียนหรือสายการเรียน');
+        return false;
+      }
+    } else if (step === 2) {
+      if (photos.length === 0) {
+        setErrorMsg('จำเป็นต้องใส่รูปถ่ายโปรไฟล์อย่างน้อย 1 รูป หากไม่ใส่จะไม่สามารถเข้าใช้งานได้');
+        return false;
+      }
+    } else if (step === 3) {
+      if (selectedInterests.length === 0) {
+        setErrorMsg('กรุณาเลือกสิ่งที่สนใจอย่างน้อย 1 อย่าง');
+        return false;
+      }
+    }
+    return true;
+  };
 
-    updateProfile({
-      display_name: displayName,
+  const handleNextStep = () => {
+    if (validateCurrentStep()) {
+      setStep((prev) => prev + 1);
+    }
+  };
+
+  const handleFinalSubmit = () => {
+    if (photos.length === 0 || !displayName.trim()) {
+      setErrorMsg('กรุณากรอกข้อมูลและอัปโหลดรูปภาพให้ครบถ้วน');
+      return;
+    }
+
+    const birthYear = new Date(birthdate).getFullYear();
+    const age = Math.max(15, new Date().getFullYear() - birthYear);
+    const userId = `user-${Date.now()}`;
+
+    const newUser: UserProfile = {
+      id: userId,
+      email: email.trim() || `${userId}@nmrtup.ac.th`,
+      display_name: displayName.trim(),
       birthdate,
-      age: Math.max(15, age),
+      age,
       gender,
-      school_department: department,
-      bio,
-      photos,
-      avatar_url: photos[0]?.url || currentUser?.avatar_url || '',
+      school_department: department.trim(),
+      bio: bio.trim() || 'สวัสดีครับ/ค่ะ ยินดีที่ได้รู้จักทุกคนใน NMR TUP นะ!',
+      mode: 'CAMPUS_FRIENDS',
+      is_verified: true,
+      is_hidden: false,
+      is_suspended: false,
+      is_banned: false,
+      is_admin: false,
+      avatar_url: photos[0].url,
+      photos: photos.map((p, idx) => ({ ...p, user_id: userId, order_index: idx })),
       interests: selectedInterests,
       preferences: {
         preferred_gender: preferredGender,
@@ -83,18 +145,21 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) =>
         notifications_enabled: true,
         discovery_active: true,
       },
-    });
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
 
+    registerUser(newUser);
     onComplete();
   };
 
   return (
     <div className="min-h-screen bg-[#FFF9FA] dark:bg-[#111116] flex flex-col justify-between p-4 sm:p-8">
-      {/* Header with Logo & Step Indicators */}
+      {/* Header */}
       <div className="max-w-xl w-full mx-auto flex flex-col items-center">
         <Logo size="md" />
 
-        {/* Progress Dots */}
+        {/* Step Dots */}
         <div className="flex items-center gap-2 mt-6">
           {Array.from({ length: totalSteps }).map((_, i) => (
             <div
@@ -114,17 +179,24 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) =>
         </span>
       </div>
 
-      {/* Main Step Container */}
-      <div className="max-w-xl w-full mx-auto my-8 bg-white dark:bg-[#1A1924] rounded-3xl p-6 sm:p-8 border border-[#F2E3E6] dark:border-[#2C2B3C] shadow-card">
+      {/* Main Card */}
+      <div className="max-w-xl w-full mx-auto my-6 bg-white dark:bg-[#1A1924] rounded-3xl p-6 sm:p-8 border border-[#F2E3E6] dark:border-[#2C2B3C] shadow-card">
+        {errorMsg && (
+          <div className="mb-4 p-3 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 text-rose-600 dark:text-rose-300 text-xs flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            <span>{errorMsg}</span>
+          </div>
+        )}
+
         {/* Step 1: Basic Info */}
         {step === 1 && (
           <div className="space-y-4 animate-in fade-in">
             <div>
               <h2 className="text-xl font-black text-[#20202A] dark:text-[#F4F3F9]">
-                ยินดีต้อนรับสู่ Tinder NMR TUP! 🎉
+                สร้างบัญชีโปรไฟล์ใหม่ 📝
               </h2>
               <p className="text-xs text-[#8A8994] mt-1">
-                กรอกข้อมูลส่วนตัวเบื้องต้นเพื่อเริ่มต้นทำความรู้จักเพื่อน ๆ ในสถาบัน
+                กรอกข้อมูลนักเรียนของคุณเพื่อเริ่มใช้งาน (จำเป็นต้องใส่ข้อมูลจริงเพื่อความปลอดภัย)
               </p>
             </div>
 
@@ -132,14 +204,33 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) =>
               <label className="block text-xs font-semibold text-[#20202A] dark:text-[#F4F3F9] mb-1">
                 ชื่อที่ต้องการให้แสดง (Display Name) *
               </label>
-              <input
-                type="text"
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
-                placeholder="เช่น ภูเขา, มินา, เคน"
-                className="w-full text-sm p-3 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-[#201F2C] text-[#20202A] dark:text-[#F4F3F9] focus:outline-none focus:border-[#FF526B]"
-                required
-              />
+              <div className="relative">
+                <User className="w-4 h-4 text-[#8A8994] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                  placeholder="เช่น พลอย, บอส, มินท์"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-[#201F2C] text-xs sm:text-sm text-[#20202A] dark:text-[#F4F3F9] focus:outline-none focus:border-[#FF526B]"
+                  required
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-[#20202A] dark:text-[#F4F3F9] mb-1">
+                อีเมล (Email)
+              </label>
+              <div className="relative">
+                <Mail className="w-4 h-4 text-[#8A8994] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="student@nmrtup.ac.th (ถ้ามี)"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-[#201F2C] text-xs sm:text-sm text-[#20202A] dark:text-[#F4F3F9] focus:outline-none focus:border-[#FF526B]"
+                />
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
@@ -151,7 +242,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) =>
                   type="date"
                   value={birthdate}
                   onChange={(e) => setBirthdate(e.target.value)}
-                  className="w-full text-sm p-3 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-[#201F2C] text-[#20202A] dark:text-[#F4F3F9] focus:outline-none focus:border-[#FF526B]"
+                  className="w-full text-xs sm:text-sm p-2.5 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-[#201F2C] text-[#20202A] dark:text-[#F4F3F9] focus:outline-none focus:border-[#FF526B]"
                 />
               </div>
 
@@ -162,7 +253,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) =>
                 <select
                   value={gender}
                   onChange={(e) => setGender(e.target.value as Gender)}
-                  className="w-full text-sm p-3 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-[#201F2C] text-[#20202A] dark:text-[#F4F3F9] focus:outline-none focus:border-[#FF526B]"
+                  className="w-full text-xs sm:text-sm p-2.5 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-[#201F2C] text-[#20202A] dark:text-[#F4F3F9] focus:outline-none focus:border-[#FF526B]"
                 >
                   <option value="male">ชาย (Male)</option>
                   <option value="female">หญิง (Female)</option>
@@ -174,41 +265,43 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) =>
 
             <div>
               <label className="block text-xs font-semibold text-[#20202A] dark:text-[#F4F3F9] mb-1">
-                แผนการเรียน / สายการเรียน (School / Department) *
+                แผนการเรียน / สายการเรียน (Department / Major) *
               </label>
               <input
                 type="text"
                 value={department}
                 onChange={(e) => setDepartment(e.target.value)}
-                placeholder="เช่น วิทย์-คณิต, ศิลป์-ภาษา, วิทย์-คอมพิวเตอร์"
-                className="w-full text-sm p-3 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-[#201F2C] text-[#20202A] dark:text-[#F4F3F9] focus:outline-none focus:border-[#FF526B]"
+                placeholder="เช่น วิทย์-คณิต, ศิลป์-คำนวณ, ศิลป์-ภาษา"
+                className="w-full text-xs sm:text-sm p-2.5 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-[#201F2C] text-[#20202A] dark:text-[#F4F3F9] focus:outline-none focus:border-[#FF526B]"
+                required
               />
             </div>
 
             <div>
               <label className="block text-xs font-semibold text-[#20202A] dark:text-[#F4F3F9] mb-1">
-                เกี่ยวกับฉัน (Bio)
+                เกี่ยวกับฉัน (Bio / About Me)
               </label>
               <textarea
-                rows={3}
+                rows={2}
                 value={bio}
                 onChange={(e) => setBio(e.target.value)}
-                placeholder="บอกเล่าเรื่องราวความชอบ หรือสิ่งที่อยากชวนเพื่อน ๆ ทำร่วมกัน..."
-                className="w-full text-sm p-3 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-[#201F2C] text-[#20202A] dark:text-[#F4F3F9] focus:outline-none focus:border-[#FF526B]"
+                placeholder="ความชอบ สิ่งที่กำลังสนใจ หรือชวนคุยเรื่องอะไร..."
+                className="w-full text-xs sm:text-sm p-2.5 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-[#201F2C] text-[#20202A] dark:text-[#F4F3F9] focus:outline-none focus:border-[#FF526B]"
               />
             </div>
           </div>
         )}
 
-        {/* Step 2: Photos */}
+        {/* Step 2: Photos (MANDATORY) */}
         {step === 2 && (
           <div className="space-y-4 animate-in fade-in">
             <div>
-              <h2 className="text-xl font-black text-[#20202A] dark:text-[#F4F3F9]">
-                อัปโหลดรูปถ่ายโปรไฟล์ 📸
+              <h2 className="text-xl font-black text-[#20202A] dark:text-[#F4F3F9] flex items-center gap-2">
+                <Camera className="w-5 h-5 text-[#FF526B]" />
+                อัปโหลดรูปถ่ายของคุณ * (จำเป็น)
               </h2>
-              <p className="text-xs text-[#8A8994] mt-1">
-                รูปถ่ายที่ดูสดใส ชัดเจน และสะท้อนตัวตนของคุณ
+              <p className="text-xs text-rose-500 font-semibold mt-1">
+                * ต้องใส่รูปถ่ายอย่างน้อย 1 รูปภาพ หากไม่ใส่รูปภาพจะไม่สามารถเข้าใช้งานได้
               </p>
             </div>
 
@@ -235,15 +328,22 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) =>
               ))}
 
               {photos.length < 6 && (
-                <label className="h-36 rounded-2xl border-2 border-dashed border-gray-300 dark:border-gray-700 hover:border-[#FF526B] bg-gray-50 dark:bg-[#201F2C] flex flex-col items-center justify-center gap-2 cursor-pointer transition">
-                  <div className="w-10 h-10 rounded-full bg-[#FFEBF0] dark:bg-[#2B1822] text-[#FF526B] flex items-center justify-center">
+                <label className="h-36 rounded-2xl border-2 border-dashed border-[#FF526B]/50 hover:border-[#FF526B] bg-[#FFF8FA] dark:bg-[#201F2C] flex flex-col items-center justify-center gap-2 cursor-pointer transition">
+                  <div className="w-10 h-10 rounded-full bg-[#FFEBF0] dark:bg-[#2B1822] text-[#FF526B] flex items-center justify-center shadow-xs">
                     <Plus className="w-5 h-5" />
                   </div>
-                  <span className="text-[11px] font-semibold text-[#8A8994]">เพิ่มรูป</span>
+                  <span className="text-xs font-bold text-[#FF526B]">เลือกรูปภาพ</span>
                   <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
                 </label>
               )}
             </div>
+
+            {photos.length > 0 && (
+              <p className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
+                <Check className="w-4 h-4" />
+                อัปโหลดรูปภาพแล้ว {photos.length} รูป
+              </p>
+            )}
           </div>
         )}
 
@@ -252,10 +352,10 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) =>
           <div className="space-y-4 animate-in fade-in">
             <div>
               <h2 className="text-xl font-black text-[#20202A] dark:text-[#F4F3F9]">
-                เลือกสิ่งที่คุณสนใจ 🎨
+                เลือกสิ่งที่คุณสนใจ 🎨 *
               </h2>
               <p className="text-xs text-[#8A8994] mt-1">
-                เลือกความสนใจและกิจกรรมที่ชอบ เพื่อให้อัลกอริทึมจับคู่คนที่สนใจเหมือนกัน (เลือกได้ 3-7 อย่าง)
+                เลือกความสนใจและกิจกรรมที่ชอบอย่างน้อย 1 อย่าง (เลือกได้สูงสุด 7 อย่าง)
               </p>
             </div>
 
@@ -279,6 +379,12 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) =>
                 );
               })}
             </div>
+
+            {selectedInterests.length > 0 && (
+              <span className="text-xs font-bold text-[#FF526B] block">
+                เลือกแล้ว {selectedInterests.length} อย่าง
+              </span>
+            )}
           </div>
         )}
 
@@ -335,16 +441,18 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) =>
                 ตรวจสอบหน้าตาโปรไฟล์ของคุณ ✨
               </h2>
               <p className="text-xs text-[#8A8994] mt-1">
-                นี่คือหน้าตาโปรไฟล์ที่เพื่อน ๆ ใน NMR TUP จะมองเห็น
+                โปรไฟล์ของคุณพร้อมแล้ว กดยืนยันเพื่อเริ่มใช้งาน
               </p>
             </div>
 
             <div className="relative rounded-3xl overflow-hidden shadow-card border border-gray-200 dark:border-gray-800 h-80 bg-gray-900">
-              <img
-                src={photos[0]?.url || currentUser?.avatar_url}
-                alt="Preview"
-                className="w-full h-full object-cover"
-              />
+              {photos[0]?.url && (
+                <img
+                  src={photos[0].url}
+                  alt="Preview"
+                  className="w-full h-full object-cover"
+                />
+              )}
               <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-black/85 via-black/40 to-transparent" />
               <div className="absolute bottom-4 left-4 right-4 text-white">
                 <h3 className="text-xl font-bold">{displayName || 'ชื่อของคุณ'}</h3>
@@ -353,6 +461,13 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) =>
                   <span>{department}</span>
                 </p>
                 <p className="text-xs text-white/90 line-clamp-2 mt-1">{bio || 'ยังไม่มีคำแนะนำตัว'}</p>
+                <div className="flex flex-wrap gap-1 mt-2">
+                  {selectedInterests.map((item) => (
+                    <span key={item.id} className="px-2 py-0.5 rounded-full bg-white/20 text-[10px]">
+                      {item.icon} {item.name}
+                    </span>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
@@ -370,15 +485,22 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) =>
               ย้อนกลับ
             </button>
           ) : (
-            <div />
+            onCancel ? (
+              <button
+                type="button"
+                onClick={onCancel}
+                className="px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-800 text-xs font-semibold text-[#8A8994] hover:bg-gray-50"
+              >
+                ยกเลิก
+              </button>
+            ) : <div />
           )}
 
           {step < totalSteps ? (
             <button
               type="button"
-              disabled={step === 1 && !displayName.trim()}
-              onClick={() => setStep(step + 1)}
-              className="px-6 py-2.5 rounded-xl bg-gradient-brand text-white font-bold text-xs shadow-brand hover:opacity-95 disabled:opacity-40 flex items-center gap-1.5 transition"
+              onClick={handleNextStep}
+              className="px-6 py-2.5 rounded-xl bg-gradient-brand text-white font-bold text-xs shadow-brand hover:opacity-95 flex items-center gap-1.5 transition"
             >
               ถัดไป
               <ChevronRight className="w-4 h-4" />
@@ -390,7 +512,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) =>
               className="px-6 py-2.5 rounded-xl bg-gradient-brand text-white font-bold text-xs shadow-brand hover:opacity-95 flex items-center gap-1.5 transition"
             >
               <Check className="w-4 h-4" />
-              ยืนยันและเริ่มใช้งานเลย
+              สร้างบัญชีและเริ่มใช้งาน
             </button>
           )}
         </div>

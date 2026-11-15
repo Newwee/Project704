@@ -12,49 +12,14 @@ import { SwipeDeck } from '@/components/discovery/SwipeDeck';
 import { LikesView } from '@/components/likes/LikesView';
 import { ChatView } from '@/components/chat/ChatView';
 import { ProfileView } from '@/components/profile/ProfileView';
-import { AdminDashboard } from '@/components/admin/AdminDashboard';
 import { MatchCelebrationModal } from '@/components/matches/MatchCelebrationModal';
 
 export default function Home() {
-  const { currentUser, loginAs } = useApp();
+  const { currentUser } = useApp();
   const [currentTab, setCurrentTab] = useState('discover');
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [isOnboarding, setIsOnboarding] = useState(false);
   const [targetConvoId, setTargetConvoId] = useState<string | undefined>();
-
-  // If not logged in and not onboarding, show Landing Page
-  if (!currentUser && !isOnboarding) {
-    return (
-      <>
-        <LandingPage
-          onStart={(demoUser) => {
-            if (demoUser) {
-              loginAs(demoUser);
-              if (demoUser.is_admin) {
-                setCurrentTab('admin');
-              } else {
-                setCurrentTab('discover');
-              }
-            } else {
-              setAuthModalOpen(true);
-            }
-          }}
-          onOpenAuth={() => setAuthModalOpen(true)}
-        />
-        <AuthModal
-          isOpen={authModalOpen}
-          onClose={() => setAuthModalOpen(false)}
-          onSuccess={(isNewUser) => {
-            if (isNewUser) {
-              setIsOnboarding(true);
-            } else {
-              setCurrentTab('discover');
-            }
-          }}
-        />
-      </>
-    );
-  }
 
   // If user is undergoing onboarding flow
   if (isOnboarding) {
@@ -64,7 +29,28 @@ export default function Home() {
           setIsOnboarding(false);
           setCurrentTab('discover');
         }}
+        onCancel={currentUser ? () => setIsOnboarding(false) : undefined}
       />
+    );
+  }
+
+  // If not logged in and not onboarding, show Landing Page
+  if (!currentUser) {
+    return (
+      <>
+        <LandingPage
+          onStartRegister={() => setIsOnboarding(true)}
+          onOpenAuth={() => setAuthModalOpen(true)}
+        />
+        <AuthModal
+          isOpen={authModalOpen}
+          onClose={() => setAuthModalOpen(false)}
+          onStartRegister={() => {
+            setAuthModalOpen(false);
+            setIsOnboarding(true);
+          }}
+        />
+      </>
     );
   }
 
@@ -76,6 +62,7 @@ export default function Home() {
         onNavigateToTab={(tab) => {
           setCurrentTab(tab);
         }}
+        onOpenRegister={() => setIsOnboarding(true)}
       />
 
       {/* Main Body Layout: Desktop Sidebar + Content Area */}
@@ -101,8 +88,6 @@ export default function Home() {
           )}
 
           {currentTab === 'profile' && <ProfileView />}
-
-          {currentTab === 'admin' && <AdminDashboard />}
         </main>
       </div>
 
