@@ -1,4 +1,5 @@
 import React from 'react';
+import GradientText from '@/components/reactbits/GradientText/GradientText';
 
 interface LogoProps {
   className?: string;
@@ -57,11 +58,16 @@ export const Logo: React.FC<LogoProps> = ({
 
       {showText && (
         <div className="flex flex-col leading-none">
-          <span className={`${textSizeMap[size]} text-gradient-brand`}>
+          <GradientText
+            colors={['#FF416C', '#FF526B', '#FF7A85', '#FFA07A', '#FF416C']}
+            animationSpeed={6}
+            variant="flow"
+            className={`${textSizeMap[size]} font-black`}
+          >
             Tinder NMR TUP
-          </span>
-          <span className="text-[10px] tracking-widest uppercase font-semibold text-[#8A8994] dark:text-[#9795A7]">
-            Meet • Match • Connect
+          </GradientText>
+          <span className="text-[10px] font-semibold text-[#8A8994] dark:text-[#9795A7] tracking-wider mt-0.5 uppercase">
+            Meet. Match. Connect.
           </span>
         </div>
       )}

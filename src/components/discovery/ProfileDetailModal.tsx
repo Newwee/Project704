@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { UserProfile } from '@/types';
+import PulseHeart from '@/components/reactbits/PulseHeart/PulseHeart';
 import {
   X,
   BadgeCheck,
   GraduationCap,
   Sparkles,
-  Heart,
   Flag,
   ChevronLeft,
   ChevronRight,
@@ -185,7 +185,7 @@ export const ProfileDetailModal: React.FC<ProfileDetailModalProps> = ({
         </div>
 
         {/* Bottom Action Footer */}
-        <div className="p-4 bg-gray-50 dark:bg-[#15141E] border-t border-gray-100 dark:border-gray-800 flex gap-3 shrink-0">
+        <div className="p-4 bg-gray-50 dark:bg-[#15141E] border-t border-gray-100 dark:border-gray-800 flex items-center justify-between gap-3 shrink-0">
           <button
             onClick={() => {
               onPass(profile.id);
@@ -196,16 +196,27 @@ export const ProfileDetailModal: React.FC<ProfileDetailModalProps> = ({
             <X className="w-4 h-4" />
             PASS
           </button>
-          <button
-            onClick={() => {
-              onLike(profile.id);
-              onClose();
-            }}
-            className="flex-1 py-3 rounded-2xl bg-gradient-brand text-white font-bold text-xs shadow-brand hover:opacity-95 flex items-center justify-center gap-2 transition"
-          >
-            <Heart className="w-4 h-4 fill-white" />
-            LIKE
-          </button>
+          <div className="flex-1 flex justify-center">
+            <PulseHeart
+              liked={false}
+              count={profile.compatibility_score || 1}
+              showCount={true}
+              size={46}
+              likedColor="#FF526B"
+              idleColor="#8A8994"
+              pillColor="#FF526B"
+              textColor="#ffffff"
+              label="Like"
+              onChange={(nextLiked: boolean) => {
+                if (nextLiked) {
+                  setTimeout(() => {
+                    onLike(profile.id);
+                    onClose();
+                  }, 400);
+                }
+              }}
+            />
+          </div>
         </div>
       </div>
     </div>

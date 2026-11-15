@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Logo } from '../common/Logo';
+import GradientText from '@/components/reactbits/GradientText/GradientText';
 import {
   Sparkles,
   Heart,
@@ -54,7 +55,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStartRegister, onOpe
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.15]">
             ค้นพบมิตรภาพใหม่ <br className="hidden sm:inline" />
             ที่ตรงใจใน{' '}
-            <span className="text-gradient-brand drop-shadow-sm">NMR TUP</span>
+            <GradientText
+              colors={['#FF416C', '#FF526B', '#FF7A85', '#FFA07A', '#FF416C']}
+              animationSpeed={6}
+              variant="flow"
+              className="inline-block drop-shadow-sm font-black"
+            >
+              NMR TUP
+            </GradientText>
           </h1>
 
           <p className="text-sm sm:text-base text-[#8A8994] dark:text-[#9795A7] max-w-xl mx-auto lg:mx-0 leading-relaxed">

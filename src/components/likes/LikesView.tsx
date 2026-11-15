@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useApp } from '@/context/AppContext';
 import { Heart, Sparkles, X, BadgeCheck, GraduationCap, Eye } from 'lucide-react';
+import PulseHeart from '@/components/reactbits/PulseHeart/PulseHeart';
 import { UserProfile } from '@/types';
 import { ProfileDetailModal } from '../discovery/ProfileDetailModal';
 import { ReportModal } from '../safety/ReportModal';
@@ -108,7 +109,7 @@ export const LikesView: React.FC = () => {
               </div>
 
               {/* Action Buttons */}
-              <div className="p-2.5 flex items-center gap-2 bg-white dark:bg-[#1E1D2A] border-t border-gray-100 dark:border-gray-800">
+              <div className="p-2.5 flex items-center justify-between gap-2 bg-white dark:bg-[#1E1D2A] border-t border-gray-100 dark:border-gray-800">
                 <button
                   onClick={() => handlePass(user.id)}
                   title="Pass"
@@ -116,14 +117,24 @@ export const LikesView: React.FC = () => {
                 >
                   <X className="w-4 h-4" />
                 </button>
-                <button
-                  onClick={() => handleLikeBack(user.id)}
-                  title="Like Back & Match"
-                  className="flex-1 py-2 rounded-xl bg-gradient-brand text-white font-bold text-xs shadow-brand hover:opacity-95 flex items-center justify-center gap-1 transition"
-                >
-                  <Heart className="w-3.5 h-3.5 fill-white" />
-                  <span>Match</span>
-                </button>
+                <div className="flex-1 flex justify-center">
+                  <PulseHeart
+                    liked={false}
+                    count={1}
+                    showCount={false}
+                    size={36}
+                    likedColor="#FF526B"
+                    idleColor="#8A8994"
+                    pillColor="#FF526B"
+                    textColor="#ffffff"
+                    label="Match"
+                    onChange={(nextLiked: boolean) => {
+                      if (nextLiked) {
+                        setTimeout(() => handleLikeBack(user.id), 300);
+                      }
+                    }}
+                  />
+                </div>
               </div>
             </div>
           ))}

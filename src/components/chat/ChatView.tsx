@@ -17,6 +17,7 @@ import {
 import { UserProfile } from '@/types';
 import { ProfileDetailModal } from '../discovery/ProfileDetailModal';
 import { ReportModal } from '../safety/ReportModal';
+import FuseButton from '@/components/reactbits/FuseButton/FuseButton';
 
 interface ChatViewProps {
   initialConversationId?: string;
@@ -42,6 +43,7 @@ export const ChatView: React.FC<ChatViewProps> = ({ initialConversationId }) => 
   const [detailProfile, setDetailProfile] = useState<UserProfile | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [reportTarget, setReportTarget] = useState<{ id: string; name: string } | null>(null);
+  const [isUnmatching, setIsUnmatching] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -256,8 +258,7 @@ export const ChatView: React.FC<ChatViewProps> = ({ initialConversationId }) => 
                       <button
                         onClick={() => {
                           setMenuOpen(false);
-                          unmatch(activeConvo.match_id);
-                          setSelectedConvoId(null);
+                          setIsUnmatching(true);
                         }}
                         className="w-full px-4 py-2 text-left text-xs font-medium text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/30 flex items-center gap-2"
                       >
@@ -289,6 +290,44 @@ export const ChatView: React.FC<ChatViewProps> = ({ initialConversationId }) => 
                   )}
                 </div>
               </div>
+
+              {/* Unmatch Fuse Confirmation Banner */}
+              {isUnmatching && (
+                <div className="p-3 bg-red-50 dark:bg-red-950/40 border-b border-red-200 dark:border-red-900/60 flex flex-wrap items-center justify-between gap-2.5 animate-in fade-in slide-in-from-top-2">
+                  <div className="text-xs text-red-600 dark:text-red-400 font-semibold flex items-center gap-1.5">
+                    <UserX className="w-4 h-4 shrink-0" />
+                    <span>ต้องการยกเลิกแมตช์กับ <strong>{otherUser.display_name}</strong>?</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setIsUnmatching(false)}
+                      className="px-3 py-1.5 rounded-xl text-xs font-semibold text-gray-600 dark:text-gray-300 hover:bg-gray-200/50 transition"
+                    >
+                      ยกเลิก
+                    </button>
+                    <FuseButton
+                      label="กดยืนยันยกเลิก"
+                      undoLabel="ยกเลิกทันที (Undo)"
+                      doneLabel="ยกเลิกแมตช์แล้ว"
+                      background="#dc2626"
+                      color="#ffffff"
+                      fuseColor="#fca5a5"
+                      size="sm"
+                      radius={18}
+                      undoWindow={4000}
+                      commitOn="fuseEnd"
+                      onUndo={() => {
+                        setIsUnmatching(false);
+                      }}
+                      onFuseEnd={() => {
+                        unmatch(activeConvo.match_id);
+                        setSelectedConvoId(null);
+                        setIsUnmatching(false);
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
 
               {/* Messages Body */}
               <div className="flex-1 p-4 overflow-y-auto space-y-3">

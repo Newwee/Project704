@@ -1,83 +1,111 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useApp } from '@/context/AppContext';
-import { Flame, Heart, MessageCircle, User } from 'lucide-react';
+import Dock, { DockItemData } from '@/components/reactbits/Dock/Dock';
+import { HugeiconsIcon } from '@hugeicons/react';
+import {
+  FireIcon,
+  FavouriteIcon,
+  BubbleChatIcon,
+  UserIcon,
+} from '@hugeicons/core-free-icons';
 
 interface MobileNavBarProps {
   currentTab: string;
   onSelectTab: (tab: string) => void;
 }
 
+const glyph = (icon: React.ComponentProps<typeof HugeiconsIcon>['icon']) => (
+  <HugeiconsIcon icon={icon} size="1.4em" strokeWidth={1.8} />
+);
+
 export const MobileNavBar: React.FC<MobileNavBarProps> = ({
   currentTab,
   onSelectTab,
 }) => {
-  const { likedByUsers, conversations } = useApp();
+  const { likedByUsers, conversations, logout } = useApp();
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    const checkDark = () => {
+      setIsDark(document.documentElement.classList.contains('dark'));
+    };
+    checkDark();
+
+    const observer = new MutationObserver(checkDark);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class'],
+    });
+
+    return () => observer.disconnect();
+  }, []);
 
   const unreadMessagesCount = conversations.reduce(
     (acc, curr) => acc + (curr.unread_count || 0),
     0
   );
 
-  const navItems = [
+  const items: DockItemData[] = [
     {
-      id: 'discover',
+      icon: glyph(FireIcon),
       label: 'Discover',
-      icon: <Flame className="w-5 h-5" />,
+      active: currentTab === 'discover',
+      onClick: () => onSelectTab('discover'),
+      menu: [
+        { label: 'Explore Matches', onClick: () => onSelectTab('discover') },
+      ],
     },
     {
-      id: 'likes',
+      icon: glyph(FavouriteIcon),
       label: 'Likes',
-      icon: <Heart className="w-5 h-5" />,
+      active: currentTab === 'likes',
       badge: likedByUsers.length > 0 ? likedByUsers.length : undefined,
+      onClick: () => onSelectTab('likes'),
+      menu: [
+        { label: 'Who Liked You', onClick: () => onSelectTab('likes') },
+      ],
     },
     {
-      id: 'chat',
-      label: 'Chat',
-      icon: <MessageCircle className="w-5 h-5" />,
+      icon: glyph(BubbleChatIcon),
+      label: 'Messages',
+      active: currentTab === 'chat',
       badge: unreadMessagesCount > 0 ? unreadMessagesCount : undefined,
+      onClick: () => onSelectTab('chat'),
+      menu: [
+        { label: 'All Conversations', onClick: () => onSelectTab('chat') },
+      ],
     },
     {
-      id: 'profile',
+      icon: glyph(UserIcon),
       label: 'Profile',
-      icon: <User className="w-5 h-5" />,
+      active: currentTab === 'profile',
+      onClick: () => onSelectTab('profile'),
+      menu: [
+        { label: 'Edit Profile', onClick: () => onSelectTab('profile') },
+        { separator: true },
+        { label: 'Log Out', onClick: () => logout() },
+      ],
     },
   ];
 
   return (
-    <nav className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 dark:bg-[#161520]/95 backdrop-blur-md border-t border-[#F2E3E6] dark:border-[#2C2B3C] px-2 py-2 safe-bottom shadow-lg select-none">
-      <div className="flex items-center justify-around max-w-md mx-auto">
-        {navItems.map((item) => {
-          const isActive = currentTab === item.id;
-          return (
-            <button
-              key={item.id}
-              onClick={() => onSelectTab(item.id)}
-              className={`relative flex flex-col items-center justify-center p-2 rounded-2xl transition duration-150 ${
-                isActive
-                  ? 'text-[#FF526B]'
-                  : 'text-[#8A8994] dark:text-[#9795A7] hover:text-[#20202A] dark:hover:text-white'
-              }`}
-            >
-              <div className="relative">
-                {item.icon}
-                {item.badge !== undefined && (
-                  <span className="absolute -top-1.5 -right-2.5 px-1.5 py-0.2 rounded-full bg-gradient-brand text-white text-[9px] font-bold border-2 border-white dark:border-[#161520]">
-                    {item.badge}
-                  </span>
-                )}
-              </div>
-              <span className={`text-[10px] mt-1 font-semibold ${isActive ? 'font-black' : ''}`}>
-                {item.label}
-              </span>
-              {isActive && (
-                <span className="w-1.5 h-1.5 rounded-full bg-[#FF526B] mt-0.5" />
-              )}
-            </button>
-          );
-        })}
+    <div className="fixed bottom-3 inset-x-0 z-40 flex justify-center pointer-events-none select-none px-4">
+      <div className="relative pointer-events-auto">
+        <Dock
+          items={items}
+          theme={isDark ? 'dark' : 'light'}
+          baseItemSize={48}
+          magnification={66}
+          panelHeight={66}
+          roundness={0.7}
+          gap={10}
+          badgeColor="#FF526B"
+          accentColor="#FF526B"
+          className="shadow-2xl border border-white/40 dark:border-white/10"
+        />
       </div>
-    </nav>
+    </div>
   );
 };
