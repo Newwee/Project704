@@ -1,0 +1,18 @@
+{
+  "name": "Tinder NMR TUP",
+  "short_name": "NMR TUP",
+  "description": "Premium Social & Campus Matching for NMR TUP. Meet. Match. Connect.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FFF9FA",
+  "theme_color": "#FF526B",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/logo.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

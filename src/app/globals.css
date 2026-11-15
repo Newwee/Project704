@@ -1,0 +1,102 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --primary: #FF526B;
+    --primary-hover: #E8455E;
+    --primary-light: #FFEBF0;
+    --secondary: #FF7A85;
+    --accent: #FF416C;
+    --background: #FFF9FA;
+    --surface: #FFFFFF;
+    --surface-card: #FFFFFF;
+    --surface-hover: #FFF1F4;
+    --border: #F2E3E6;
+    --text-primary: #20202A;
+    --text-secondary: #8A8994;
+    --text-muted: #B2B0BD;
+    --like-color: #10B981;
+    --pass-color: #EF4444;
+    --superlike-color: #3B82F6;
+  }
+
+  .dark {
+    --primary: #FF526B;
+    --primary-hover: #FF687E;
+    --primary-light: #2A171D;
+    --secondary: #FF7A85;
+    --accent: #FF416C;
+    --background: #111116;
+    --surface: #191822;
+    --surface-card: #22212F;
+    --surface-hover: #2D2B3F;
+    --border: #2C2B3C;
+    --text-primary: #F4F3F9;
+    --text-secondary: #9795A7;
+    --text-muted: #6B697B;
+    --like-color: #34D399;
+    --pass-color: #F87171;
+    --superlike-color: #60A5FA;
+  }
+}
+
+body {
+  background-color: var(--background);
+  color: var(--text-primary);
+  font-feature-settings: "rlig" 1, "calt" 1;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  touch-action: pan-y;
+  overscroll-behavior-y: none;
+}
+
+/* Gradient Utilities */
+.bg-gradient-brand {
+  background: linear-gradient(135deg, #FF416C 0%, #FF526B 60%, #FF7A85 100%);
+}
+
+.bg-gradient-romantic {
+  background: linear-gradient(135deg, #FF758C 0%, #FF7EB3 100%);
+}
+
+.text-gradient-brand {
+  background: linear-gradient(135deg, #FF416C 0%, #FF526B 60%, #FF7A85 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.shadow-brand {
+  box-shadow: 0 10px 25px -5px rgba(255, 82, 107, 0.35), 0 8px 10px -6px rgba(255, 82, 107, 0.2);
+}
+
+.shadow-card {
+  box-shadow: 0 10px 30px -8px rgba(0, 0, 0, 0.08), 0 4px 12px -2px rgba(0, 0, 0, 0.04);
+}
+
+.dark .shadow-card {
+  box-shadow: 0 10px 30px -8px rgba(0, 0, 0, 0.4), 0 4px 12px -2px rgba(0, 0, 0, 0.2);
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(138, 137, 148, 0.25);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(138, 137, 148, 0.45);
+}
+
+/* Safe area support for native phone notches */
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 16px);
+}
+.safe-top {
+  padding-top: env(safe-area-inset-top, 16px);
+}

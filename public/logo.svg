@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <linearGradient id="gradient-primary" x1="64" y1="64" x2="448" y2="448" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FF416C" />
+      <stop offset="50%" stop-color="#FF526B" />
+      <stop offset="100%" stop-color="#FF7A85" />
+    </linearGradient>
+    <linearGradient id="glow" x1="128" y1="128" x2="384" y2="384" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.35" />
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+    </linearGradient>
+    <filter id="soft-shadow" x="-10%" y="-10%" width="120%" height="120%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#FF416C" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+
+  <!-- Outer background circle for standalone app icon -->
+  <rect width="512" height="512" rx="128" fill="url(#gradient-primary)" filter="url(#soft-shadow)"/>
+  
+  <!-- Subtle overlay sheen -->
+  <rect width="512" height="512" rx="128" fill="url(#glow)"/>
+
+  <!-- Romantic Connection Emblem: Interlaced Heart Nodes -->
+  <g transform="translate(64, 64) scale(0.75)">
+    <!-- Node A (Left Loop) -->
+    <path d="M 256 390 C 130 300 70 230 70 148 C 70 82 122 30 188 30 C 224 30 258 48 278 78 C 298 48 332 30 368 30 C 434 30 486 82 486 148 C 486 230 426 300 300 390 L 256 422 Z" 
+          fill="#FFFFFF" />
+          
+    <!-- Inner Radiant Spark: The Connection Node -->
+    <path d="M 278 170 Q 278 220 328 220 Q 278 220 278 270 Q 278 220 228 220 Q 278 220 278 170 Z" 
+          fill="url(#gradient-primary)" />
+          
+    <!-- Connection Ringlet Orbit -->
+    <circle cx="278" cy="220" r="14" fill="#FFFFFF"/>
+    <circle cx="278" cy="220" r="8" fill="#FF526B"/>
+  </g>
+</svg>
