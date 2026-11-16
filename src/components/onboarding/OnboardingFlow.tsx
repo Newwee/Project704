@@ -59,21 +59,15 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete, onCa
       // Compress with Canvas to max 720px and quality 0.75 (~35KB)
       const compressedDataUrl = await compressImage(file, 720, 720, 0.75);
 
-      // Attempt server upload for clean /uploads/ URL, fallback to compressedDataUrl
-      let finalUrl = compressedDataUrl;
-      try {
-        const res = await fetch('/api/upload', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ dataUrl: compressedDataUrl }),
-        });
-        if (res.ok) {
-          const data = await res.json();
-          if (data.url) finalUrl = data.url;
-        }
-      } catch (uploadErr) {
-        console.warn('API upload fallback:', uploadErr);
-      }
+      // Using canvas-optimized compressedDataUrl (~35KB) ensures 100% instant rendering with 0 network latency
+      const finalUrl = compressedDataUrl;
+
+      // Also persist to server upload directory in background
+      fetch('/api/upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ dataUrl: compressedDataUrl }),
+      }).catch(() => {});
 
       const newPhoto: ProfilePhoto = {
         id: `photo-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,

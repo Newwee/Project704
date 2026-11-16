@@ -54,6 +54,12 @@ export const ProfileDetailModal: React.FC<ProfileDetailModalProps> = ({
             src={photos[photoIndex]?.url || profile.avatar_url}
             alt={profile.display_name}
             className="w-full h-full object-cover"
+            onError={(e) => {
+              const target = e.currentTarget as HTMLImageElement;
+              if (!target.src.includes('default-avatar')) {
+                target.src = '/images/default-avatar.svg';
+              }
+            }}
           />
 
           {/* Photo progress bars */}

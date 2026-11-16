@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { serverDb } from '../src/lib/serverDb.ts';
+import { serverDb, SIMULATED_USER_JOHN } from '../src/lib/serverDb.ts';
 
 describe('Server Database & Real-time Chat Persistence Suite', () => {
   const testUserA = {
@@ -121,5 +121,20 @@ describe('Server Database & Real-time Chat Persistence Suite', () => {
     const lastMsg = chatMsgs[chatMsgs.length - 1];
     assert.ok(lastMsg.text.includes('จอน'), 'John auto-reply must mention จอน');
     assert.equal(lastMsg.sender_id, 'user-simulated-john');
+  });
+
+  test('6. Reset DB to pristine state with ONLY John', () => {
+    serverDb.saveRaw({
+      users: [SIMULATED_USER_JOHN],
+      swipes: {},
+      matches: [],
+      conversations: [],
+      messages: {},
+      blocks: [],
+      reports: [],
+    });
+    const users = serverDb.getUsers();
+    assert.equal(users.length, 1);
+    assert.equal(users[0].id, 'user-simulated-john');
   });
 });

@@ -122,6 +122,12 @@ export const ChatView: React.FC<ChatViewProps> = ({ initialConversationId }) => 
                         src={match.other_user.avatar_url || match.other_user.photos[0]?.url}
                         alt={match.other_user.display_name}
                         className="w-full h-full rounded-full object-cover border-2 border-white dark:border-[#181722] group-hover:scale-105 transition"
+                        onError={(e) => {
+                          const target = e.currentTarget as HTMLImageElement;
+                          if (!target.src.includes('default-avatar')) {
+                            target.src = '/images/default-avatar.svg';
+                          }
+                        }}
                       />
                       <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-emerald-500 border-2 border-white dark:border-[#181722]" />
                     </div>
@@ -164,6 +170,12 @@ export const ChatView: React.FC<ChatViewProps> = ({ initialConversationId }) => 
                         src={convo.other_user.avatar_url || convo.other_user.photos[0]?.url}
                         alt={convo.other_user.display_name}
                         className="w-full h-full object-cover"
+                        onError={(e) => {
+                          const target = e.currentTarget as HTMLImageElement;
+                          if (!target.src.includes('default-avatar')) {
+                            target.src = '/images/default-avatar.svg';
+                          }
+                        }}
                       />
                     </div>
 
@@ -236,6 +248,12 @@ export const ChatView: React.FC<ChatViewProps> = ({ initialConversationId }) => 
                         src={otherUser.avatar_url || otherUser.photos[0]?.url}
                         alt={otherUser.display_name}
                         className="w-full h-full object-cover"
+                        onError={(e) => {
+                          const target = e.currentTarget as HTMLImageElement;
+                          if (!target.src.includes('default-avatar')) {
+                            target.src = '/images/default-avatar.svg';
+                          }
+                        }}
                       />
                     </div>
                     <div>

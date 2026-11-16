@@ -93,6 +93,12 @@ export const SwipeDeck: React.FC = () => {
               src={nextProfile.avatar_url || nextProfile.photos[0]?.url}
               alt={nextProfile.display_name}
               className="w-full h-full object-cover"
+              onError={(e) => {
+                const target = e.currentTarget as HTMLImageElement;
+                if (!target.src.includes('default-avatar')) {
+                  target.src = '/images/default-avatar.svg';
+                }
+              }}
             />
             <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-black/85 via-black/40 to-transparent" />
             <div className="absolute bottom-5 left-5 right-5 text-white">
@@ -135,6 +141,12 @@ export const SwipeDeck: React.FC = () => {
                   src={photos[currentPhotoIndex]?.url || activeProfile.avatar_url}
                   alt={activeProfile.display_name}
                   className="w-full h-full object-cover pointer-events-none"
+                  onError={(e) => {
+                    const target = e.currentTarget as HTMLImageElement;
+                    if (!target.src.includes('default-avatar')) {
+                      target.src = '/images/default-avatar.svg';
+                    }
+                  }}
                 />
 
                 {/* Photo Story Segment Bars */}

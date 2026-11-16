@@ -269,11 +269,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 const msgRes = await fetch(`/api/messages?conversationId=${c.id}`);
                 if (msgRes.ok) {
                   const { messages: serverMsgs } = await msgRes.json();
-                  if (Array.isArray(serverMsgs)) {
-                    setMessages((prev) => ({
-                      ...prev,
-                      [c.id]: serverMsgs,
-                    }));
+                  if (Array.isArray(serverMsgs) && serverMsgs.length > 0) {
+                    setMessages((prev) => {
+                      const current = prev[c.id] || [];
+                      const map = new Map<string, MessageItem>();
+                      current.forEach((m) => map.set(m.id, m));
+                      serverMsgs.forEach((m: MessageItem) => map.set(m.id, m));
+                      return {
+                        ...prev,
+                        [c.id]: Array.from(map.values()).sort(
+                          (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+                        ),
+                      };
+                    });
                   }
                 }
               } catch {
@@ -487,8 +495,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (action === 'like' || action === 'superlike') {
       if (reciprocalAction === 'like' || reciprocalAction === 'superlike') {
         isMatch = true;
-        const matchId = `match-${Date.now()}`;
-        const convoId = `convo-${matchId}`;
+        const sortedIds = [currentUser.id, targetUserId].sort();
+        const matchId = `match_${sortedIds[0]}_${sortedIds[1]}`;
+        const convoId = `convo_${sortedIds[0]}_${sortedIds[1]}`;
         const now = new Date().toISOString();
 
         matchObj = {
@@ -510,7 +519,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         };
 
         const welcomeMsg: MessageItem = {
-          id: `msg-${Date.now()}`,
+          id: `msg-welcome-${matchId}`,
           conversation_id: convoId,
           sender_id: 'system',
           text: 'ยินดีด้วย! คุณทั้งคู่กดถูกใจกันและกัน เริ่มพูดคุยและทำความรู้จักกันได้เลย 👋',
@@ -518,9 +527,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           created_at: now,
         };
 
-        setMatches((prev) => [matchObj!, ...prev]);
-        setConversations((prev) => [newConvo, ...prev]);
-        setMessages((prev) => ({ ...prev, [convoId]: [welcomeMsg] }));
+        setMatches((prev) => {
+          const exists = prev.some((m) => m.id === matchId);
+          return exists ? prev : [matchObj!, ...prev];
+        });
+        setConversations((prev) => {
+          const exists = prev.some((c) => c.id === convoId);
+          return exists ? prev : [newConvo, ...prev];
+        });
+        setMessages((prev) => {
+          if (!prev[convoId] || prev[convoId].length === 0) {
+            return { ...prev, [convoId]: [welcomeMsg] };
+          }
+          return prev;
+        });
         setLatestMatchCelebration(matchObj);
 
         // Confetti Celebration!
@@ -592,10 +612,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (res.ok) {
         const data = await res.json();
         if (Array.isArray(data.messages)) {
-          setMessages((prev) => ({
-            ...prev,
-            [conversationId]: data.messages,
-          }));
+          setMessages((prev) => {
+            const currentList = prev[conversationId] || [];
+            if (data.messages.length === 0 && currentList.length > 0) {
+              return prev; // Never drop local messages if server returned empty
+            }
+            const map = new Map<string, MessageItem>();
+            currentList.forEach((m) => map.set(m.id, m));
+            data.messages.forEach((m: MessageItem) => map.set(m.id, m));
+            return {
+              ...prev,
+              [conversationId]: Array.from(map.values()).sort(
+                (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+              ),
+            };
+          });
         }
       }
     } catch (err) {
@@ -620,7 +651,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         created_at: now,
       };
 
-      // Optimistic local update
+      // Optimistic local update - ALWAYS append to current messages
       setMessages((prev) => ({
         ...prev,
         [conversationId]: [...(prev[conversationId] || []), newMsg],
@@ -655,14 +686,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         if (res.ok) {
           const data = await res.json();
           if (data.message) {
-            setMessages((prev) => ({
-              ...prev,
-              [conversationId]: (prev[conversationId] || []).map((m) =>
-                m.id === tempId ? data.message : m
-              ),
-            }));
+            setMessages((prev) => {
+              const currentList = prev[conversationId] || [];
+              const map = new Map<string, MessageItem>();
+              currentList.forEach((m) => {
+                if (m.id !== tempId) map.set(m.id, m);
+              });
+              map.set(data.message.id, data.message);
+              return {
+                ...prev,
+                [conversationId]: Array.from(map.values()).sort(
+                  (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+                ),
+              };
+            });
           }
-          // Fetch to immediately pick up automated reply from simulated John
+          // Fetch immediately and at 600ms to pick up John's reply
+          fetchMessages(conversationId);
           setTimeout(() => {
             fetchMessages(conversationId);
           }, 600);

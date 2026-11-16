@@ -40,19 +40,19 @@ export const SIMULATED_USER_JOHN: UserProfile = {
   is_admin: false,
   is_simulated: true,
   is_online: true,
-  avatar_url: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=800&q=80',
+  avatar_url: '/images/john.jpg',
   photos: [
     {
       id: 'john-p1',
       user_id: 'user-simulated-john',
-      url: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=800&q=80',
+      url: '/images/john.jpg',
       order_index: 0,
       is_primary: true,
     },
     {
       id: 'john-p2',
       user_id: 'user-simulated-john',
-      url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80',
+      url: '/images/john-2.jpg',
       order_index: 1,
       is_primary: false,
     },

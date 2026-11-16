@@ -71,6 +71,12 @@ export const LikesView: React.FC = () => {
                   src={user.avatar_url || user.photos[0]?.url}
                   alt={user.display_name}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  onError={(e) => {
+                    const target = e.currentTarget as HTMLImageElement;
+                    if (!target.src.includes('default-avatar')) {
+                      target.src = '/images/default-avatar.svg';
+                    }
+                  }}
                 />
 
                 {/* New Like Indicator Badge */}

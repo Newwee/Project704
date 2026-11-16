@@ -40,19 +40,19 @@ export const SIMULATED_USER_JOHN: UserProfile = {
   is_admin: false,
   is_simulated: true,
   is_online: true,
-  avatar_url: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=800&q=80',
+  avatar_url: '/images/john.jpg',
   photos: [
     {
       id: 'john-p1',
       user_id: 'user-simulated-john',
-      url: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=800&q=80',
+      url: '/images/john.jpg',
       order_index: 0,
       is_primary: true,
     },
     {
       id: 'john-p2',
       user_id: 'user-simulated-john',
-      url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80',
+      url: '/images/john-2.jpg',
       order_index: 1,
       is_primary: false,
     },
@@ -75,6 +75,16 @@ export const SIMULATED_USER_JOHN: UserProfile = {
   updated_at: '2026-01-01T00:00:00.000Z',
   compatibility_score: 98,
 };
+
+export function getDeterministicMatchId(idA: string, idB: string): string {
+  const sorted = [idA, idB].sort();
+  return `match_${sorted[0]}_${sorted[1]}`;
+}
+
+export function getDeterministicConvoId(idA: string, idB: string): string {
+  const sorted = [idA, idB].sort();
+  return `convo_${sorted[0]}_${sorted[1]}`;
+}
 
 const defaultDb: DbData = {
   users: [SIMULATED_USER_JOHN],
@@ -102,9 +112,18 @@ function ensureDb(): DbData {
       return defaultDb;
     }
     const parsed = JSON.parse(raw);
-    const usersList: UserProfile[] = Array.isArray(parsed.users) ? parsed.users : [];
-    if (!usersList.some((u) => u.id === 'user-simulated-john' || u.is_simulated || u.display_name === 'จอน')) {
-      usersList.push(SIMULATED_USER_JOHN);
+    const usersList: UserProfile[] = (Array.isArray(parsed.users) ? parsed.users : []).filter(Boolean);
+    const johnIdx = usersList.findIndex((u) => u && (u.id === 'user-simulated-john' || u.display_name === 'จอน'));
+    if (johnIdx >= 0) {
+      usersList[johnIdx] = {
+        ...usersList[johnIdx],
+        avatar_url: '/images/john.jpg',
+        photos: SIMULATED_USER_JOHN.photos,
+        is_simulated: true,
+        is_online: true,
+      };
+    } else {
+      usersList.unshift(SIMULATED_USER_JOHN);
     }
 
     return {
@@ -225,7 +244,8 @@ export const serverDb = {
 
         if (!existingMatch) {
           isMatch = true;
-          const matchId = `match-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+          const matchId = getDeterministicMatchId(fromUserId, toUserId);
+          const convoId = getDeterministicConvoId(fromUserId, toUserId);
           const now = new Date().toISOString();
 
           newMatch = {
@@ -238,7 +258,6 @@ export const serverDb = {
           };
           db.matches.unshift(newMatch);
 
-          const convoId = `convo-${matchId}`;
           newConvo = {
             id: convoId,
             match_id: matchId,
@@ -250,16 +269,18 @@ export const serverDb = {
           db.conversations.unshift(newConvo);
 
           // Initial system match greeting
-          db.messages[convoId] = [
-            {
-              id: `msg-welcome-${Date.now()}`,
-              conversation_id: convoId,
-              sender_id: 'system',
-              text: 'ยินดีด้วย! คุณทั้งคู่กดถูกใจกันและกัน เริ่มพูดคุยและทำความรู้จักกันได้เลย 👋',
-              created_at: now,
-              is_read: true,
-            },
-          ];
+          if (!db.messages[convoId]) {
+            db.messages[convoId] = [
+              {
+                id: `msg-welcome-${matchId}`,
+                conversation_id: convoId,
+                sender_id: 'system',
+                text: 'ยินดีด้วย! คุณทั้งคู่กดถูกใจกันและกัน เริ่มพูดคุยและทำความรู้จักกันได้เลย 👋',
+                created_at: now,
+                is_read: true,
+              },
+            ];
+          }
         }
       }
     }
@@ -338,33 +359,31 @@ export const serverDb = {
     }
 
     // Auto-reply if conversation is with simulated John
-    const convo = db.conversations.find((c) => c.id === conversationId);
-    if (convo) {
-      const match = db.matches.find((m) => m.id === convo.match_id);
-      if (match) {
-        const otherId = match.user1_id === senderId ? match.user2_id : match.user1_id;
-        const otherUser = db.users.find((u) => u.id === otherId);
-        if (
-          otherUser &&
-          (otherUser.id === 'user-simulated-john' ||
-            Boolean(otherUser.is_simulated) ||
-            otherUser.display_name === 'จอน')
-        ) {
-          const replyTime = new Date(Date.now() + 500).toISOString();
-          const replyMsg: MessageItem = {
-            id: `msg-john-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-            conversation_id: conversationId,
-            sender_id: otherUser.id,
-            text: `สวัสดีครับ! ผมจอน (คนสมมุติ) ได้รับข้อความ: "${text}" เรียบร้อยแล้ว ระบบแชททำงานสมบูรณ์ 100%! 🎉`,
-            created_at: replyTime,
-            is_read: false,
-          };
-          db.messages[conversationId].push(replyMsg);
-          if (convoIndex >= 0) {
-            db.conversations[convoIndex].last_message_text = replyMsg.text;
-            db.conversations[convoIndex].last_message_at = replyTime;
-          }
+    let isWithJohn = conversationId.includes('user-simulated-john') || senderId === 'user-simulated-john';
+    if (!isWithJohn) {
+      const convo = db.conversations.find((c) => c.id === conversationId);
+      if (convo) {
+        const other = convo.other_user;
+        if (other && (other.id === 'user-simulated-john' || other.is_simulated || other.display_name === 'จอน')) {
+          isWithJohn = true;
         }
+      }
+    }
+
+    if (isWithJohn && senderId !== 'user-simulated-john') {
+      const replyTime = new Date(Date.now() + 500).toISOString();
+      const replyMsg: MessageItem = {
+        id: `msg-john-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+        conversation_id: conversationId,
+        sender_id: 'user-simulated-john',
+        text: `สวัสดีครับ! ผมจอน (คนสมมุติ) ได้รับข้อความ: "${text}" เรียบร้อยแล้ว ระบบแชททำงานสมบูรณ์ 100%! 🎉`,
+        created_at: replyTime,
+        is_read: false,
+      };
+      db.messages[conversationId].push(replyMsg);
+      if (convoIndex >= 0) {
+        db.conversations[convoIndex].last_message_text = replyMsg.text;
+        db.conversations[convoIndex].last_message_at = replyTime;
       }
     }
 
@@ -424,5 +443,9 @@ export const serverDb = {
       created_at: new Date().toISOString(),
     });
     saveDb(db);
+  },
+
+  saveRaw(data: DbData): void {
+    saveDb(data);
   },
 };
