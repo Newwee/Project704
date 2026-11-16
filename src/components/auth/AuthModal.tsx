@@ -57,7 +57,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         <div className="flex flex-col items-center text-center mb-6">
           <Logo size="md" />
           <h2 className="text-xl font-black text-[#20202A] dark:text-[#F4F3F9] mt-3">
-            เข้าสู่ระบบ Tinder NMR TUP
+            เข้าสู่ระบบ Spark
           </h2>
           <p className="text-xs text-[#8A8994] mt-0.5">
             เข้าสู่ระบบด้วยบัญชีของคุณ หรือสร้างบัญชีใหม่เพื่อเริ่มเล่น

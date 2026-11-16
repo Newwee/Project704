@@ -3,8 +3,8 @@ import { AppProvider } from '@/context/AppContext';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Tinder NMR TUP — Meet. Match. Connect.',
-  description: 'Premium Social & Campus Matching Platform for the NMR TUP Community.',
+  title: 'Spark — Meet. Match. Connect.',
+  description: 'Premium Social Matching Platform. Meet. Match. Connect.',
   manifest: '/manifest.json',
   icons: {
     icon: '/logo.svg',

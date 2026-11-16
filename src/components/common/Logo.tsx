@@ -64,7 +64,7 @@ export const Logo: React.FC<LogoProps> = ({
             variant="flow"
             className={`${textSizeMap[size]} font-black`}
           >
-            Tinder NMR TUP
+            Spark
           </GradientText>
           <span className="text-[10px] font-semibold text-[#8A8994] dark:text-[#9795A7] tracking-wider mt-0.5 uppercase">
             Meet. Match. Connect.

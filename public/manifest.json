@@ -1,7 +1,7 @@
 {
-  "name": "Tinder NMR TUP",
-  "short_name": "NMR TUP",
-  "description": "Premium Social & Campus Matching for NMR TUP. Meet. Match. Connect.",
+  "name": "Spark - Meet. Match. Connect.",
+  "short_name": "Spark",
+  "description": "Premium Social Matching Application. Meet. Match. Connect.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#FFF9FA",

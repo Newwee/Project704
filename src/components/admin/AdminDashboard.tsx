@@ -34,7 +34,7 @@ export const AdminDashboard: React.FC = () => {
         </div>
         <h2 className="text-lg font-bold text-red-600">สิทธิ์การเข้าถึงถูกปฏิเสธ (Access Denied)</h2>
         <p className="text-xs text-[#8A8994] mt-1">
-          หน้านี้สงวนไว้สำหรับอาจารย์หรือผู้ดูแลระบบความปลอดภัยของ NMR TUP เท่านั้น
+          หน้านี้สงวนไว้สำหรับผู้ดูแลระบบความปลอดภัยของ Spark เท่านั้น
         </p>
       </div>
     );
@@ -60,7 +60,7 @@ export const AdminDashboard: React.FC = () => {
           </div>
           <div>
             <h1 className="text-xl sm:text-2xl font-black text-[#20202A] dark:text-[#F4F3F9]">
-              NMR TUP Safety & Moderation Console
+              Spark Safety & Moderation Console
             </h1>
             <p className="text-xs text-[#8A8994] dark:text-[#9795A7]">
               ศูนย์กลางการตรวจสอบความปลอดภัย จัดการผู้ใช้ และตรวจสอบการรายงาน
@@ -165,7 +165,7 @@ export const AdminDashboard: React.FC = () => {
               <h3 className="font-bold text-sm text-[#20202A] dark:text-[#F4F3F9]">
                 ไม่มีรายงานที่ต้องตรวจสอบ
               </h3>
-              <p className="text-xs text-[#8A8994] mt-1">ชุมชน NMR TUP ปลอดภัยและเรียบร้อยดี!</p>
+              <p className="text-xs text-[#8A8994] mt-1">ชุมชน Spark ปลอดภัยและเรียบร้อยดี!</p>
             </div>
           ) : (
             <div className="grid gap-3">
@@ -342,7 +342,7 @@ export const AdminDashboard: React.FC = () => {
           </h3>
           <div className="space-y-2 text-xs font-mono text-[#8A8994] dark:text-[#9795A7]">
             <div className="p-2.5 rounded-xl bg-gray-50 dark:bg-[#201F2C]">
-              [2026-11-15 23:45:10] SYSTEM_BOOT: Tinder NMR TUP initialized. Safety Mode: CAMPUS_FRIENDS.
+              [2026-11-15 23:45:10] SYSTEM_BOOT: Spark initialized. Safety Mode: CAMPUS_FRIENDS.
             </div>
             <div className="p-2.5 rounded-xl bg-gray-50 dark:bg-[#201F2C]">
               [2026-11-15 23:46:02] ADMIN_ACCESS: Moderator Kru Wittaya authenticated with role: admin.

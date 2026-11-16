@@ -187,7 +187,7 @@ export const SwipeDeck: React.FC = () => {
 
                       <div className="flex items-center gap-1.5 text-xs text-white/85 font-medium mt-0.5">
                         <GraduationCap className="w-4 h-4 text-[#FF7A85]" />
-                        <span>{activeProfile.school_department || 'NMR TUP'}</span>
+                        <span>{activeProfile.school_department || 'Member'}</span>
                       </div>
                     </div>
 
@@ -253,7 +253,7 @@ export const SwipeDeck: React.FC = () => {
                 ยังไม่มีผู้ใช้งานคนอื่นในระบบ
               </h3>
               <p className="text-xs text-[#8A8994] dark:text-[#9795A7] mt-2 max-w-xs leading-relaxed">
-                ขณะนี้ยังไม่มีสมาชิกคนอื่นในระบบ เมื่อมีเพื่อน ๆ หรือนักเรียนใน NMR TUP สมัครเข้ามา โปรไฟล์จะปรากฏที่นี่ทันที หรือคุณสามารถชวนเพื่อน ๆ มาสร้างโปรไฟล์ได้เลย!
+                ขณะนี้ยังไม่มีสมาชิกคนอื่นในระบบ เมื่อมีเพื่อน ๆ สมัครเข้ามา โปรไฟล์จะปรากฏที่นี่ทันที หรือคุณสามารถชวนเพื่อน ๆ มาสร้างโปรไฟล์ได้เลย!
               </p>
 
               <button

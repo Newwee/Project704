@@ -109,7 +109,7 @@ export const ProfileDetailModal: React.FC<ProfileDetailModalProps> = ({
             </div>
             <div className="flex items-center gap-2 text-xs text-white/80 mt-1">
               <GraduationCap className="w-4 h-4 text-[#FF7A85]" />
-              <span>{profile.school_department || 'NMR TUP'}</span>
+              <span>{profile.school_department || 'Member'}</span>
             </div>
           </div>
         </div>
@@ -172,7 +172,7 @@ export const ProfileDetailModal: React.FC<ProfileDetailModalProps> = ({
           <div className="pt-2 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
             <div className="flex items-center gap-1.5 text-xs text-[#8A8994]">
               <Shield className="w-4 h-4 text-emerald-500" />
-              <span>NMR TUP Verified Student</span>
+              <span>Verified Member</span>
             </div>
             <button
               onClick={() => onReport(profile.id, profile.display_name)}

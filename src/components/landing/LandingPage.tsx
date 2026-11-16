@@ -49,7 +49,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStartRegister, onOpe
         <div className="flex-1 space-y-6 text-center lg:text-left">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FFEBF0] dark:bg-[#281822] text-[#FF526B] border border-[#FF526B]/20 text-xs font-bold w-fit mx-auto lg:mx-0 shadow-xs">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>Meet. Match. Connect. • Exclusive for NMR TUP</span>
+            <span>Meet. Match. Connect. • Premium Social Experience</span>
           </div>
 
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.15]">
@@ -61,13 +61,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStartRegister, onOpe
               variant="flow"
               className="inline-block drop-shadow-sm font-black"
             >
-              NMR TUP
+              Spark
             </GradientText>
           </h1>
 
           <p className="text-sm sm:text-base text-[#8A8994] dark:text-[#9795A7] max-w-xl mx-auto lg:mx-0 leading-relaxed">
-            พื้นที่โซเชียลเพื่อการเชื่อมต่อของชาว นวมินทราชินูทิศ เตรียมอุดมศึกษาพัฒนาการ 
-            สมัครสมาชิก ใส่รูปจริงและข้อมูลส่วนตัว เพื่อเริ่มค้นหาเพื่อนร่วมสถาบัน แลกเปลี่ยนความชอบ และชวนกันทำกิจกรรม
+            พื้นที่โซเชียลเพื่อการค้นหาเพื่อนใหม่ที่ตรงใจ แลกเปลี่ยนความชอบ และชวนกันทำกิจกรรม
+            สมัครสมาชิก ใส่รูปจริงและข้อมูลส่วนตัว เพื่อเริ่มปัดการ์ดและแมตช์ได้ทันที
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3 pt-2">
@@ -106,13 +106,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStartRegister, onOpe
           <div className="relative w-72 sm:w-80 h-[440px] rounded-3xl overflow-hidden shadow-2xl border-4 border-white dark:border-[#282737] bg-gradient-brand p-8 text-white flex flex-col justify-between rotate-[-2deg] hover:rotate-0 transition-transform duration-300">
             <div className="space-y-2">
               <span className="px-3 py-1 rounded-full bg-white/20 text-xs font-bold backdrop-blur-md">
-                Tinder NMR TUP
+                Spark
               </span>
               <h3 className="text-2xl font-black mt-2">
                 เริ่มต้นง่าย ๆ เพียงสร้างโปรไฟล์
               </h3>
               <p className="text-xs text-white/90 leading-relaxed">
-                ใส่รูปถ่ายที่สะท้อนตัวตนของคุณ เลือกสายการเรียน และระบุความสนใจ แล้วระบบจะนำคุณไปพบเพื่อน ๆ ในโรงเรียนทันที
+                ใส่รูปถ่ายที่สะท้อนตัวตนของคุณ เลือกสายที่สนใจ และระบุสิ่งที่คุณชอบ แล้วระบบจะนำคุณไปพบเพื่อนใหม่ทันที
               </p>
             </div>
 
@@ -176,7 +176,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStartRegister, onOpe
       <footer className="py-6 border-t border-[#F2E3E6] dark:border-[#2C2B3C] text-center text-xs text-[#8A8994]">
         <div className="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
           <Logo size="sm" />
-          <span>© 2026 Tinder NMR TUP. Created for NMR TUP Community.</span>
+          <span>© 2026 Spark. All rights reserved.</span>
         </div>
       </footer>
     </div>

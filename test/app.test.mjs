@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 // Import core algorithmic and domain logic
 import { calculateCompatibilityScore, filterAndRankDiscovery } from '../src/lib/recommendation.ts';
 
-describe('Tinder NMR TUP - Core Logic & Safety Test Suite', () => {
+describe('Spark - Core Logic & Safety Test Suite', () => {
   const baseStudentA = {
     id: 'student-a',
     display_name: 'Phukao',

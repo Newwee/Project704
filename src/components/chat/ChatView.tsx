@@ -240,7 +240,7 @@ export const ChatView: React.FC<ChatViewProps> = ({ initialConversationId }) => 
                       </div>
                       <div className="flex items-center gap-1 text-[11px] text-[#8A8994]">
                         <GraduationCap className="w-3 h-3 text-[#FF7A85]" />
-                        <span>{otherUser.school_department || 'NMR TUP'}</span>
+                        <span>{otherUser.school_department || 'Member'}</span>
                       </div>
                     </div>
                   </div>
@@ -350,7 +350,7 @@ export const ChatView: React.FC<ChatViewProps> = ({ initialConversationId }) => 
                     <Shield className="w-4 h-4" />
                   </div>
                   <p className="text-[11px] font-semibold text-[#20202A] dark:text-[#F4F3F9]">
-                    NMR TUP Community Safe Chat
+                    Community Safe Chat
                   </p>
                   <p className="text-[10px] text-[#8A8994] mt-0.5">
                     ร่วมสร้างมิตรภาพที่สร้างสรรค์ ปราศจากการคุกคาม และเคารพซึ่งกันและกัน
@@ -415,7 +415,7 @@ export const ChatView: React.FC<ChatViewProps> = ({ initialConversationId }) => 
                 เลือกบทสนทนาเพื่อเริ่มแชต
               </h3>
               <p className="text-xs text-[#8A8994] mt-1 max-w-xs">
-                ทักทายเพื่อนใหม่ใน NMR TUP แลกเปลี่ยนเรื่องเรียน กิจกรรม และความชอบร่วมกัน
+                ทักทายเพื่อนใหม่ใน Spark แลกเปลี่ยนเรื่องเรียน กิจกรรม และความชอบร่วมกัน
               </p>
             </div>
           )}

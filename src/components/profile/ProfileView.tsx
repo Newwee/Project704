@@ -30,7 +30,7 @@ export const ProfileView: React.FC = () => {
 
   const [displayName, setDisplayName] = useState(currentUser?.display_name || '');
   const [bio, setBio] = useState(currentUser?.bio || '');
-  const [department, setDepartment] = useState(currentUser?.school_department || 'NMR TUP');
+  const [department, setDepartment] = useState(currentUser?.school_department || 'General');
   const [gender, setGender] = useState(currentUser?.gender || 'male');
   const [selectedInterests, setSelectedInterests] = useState(currentUser?.interests || []);
   const [photos, setPhotos] = useState<ProfilePhoto[]>(currentUser?.photos || []);
@@ -121,7 +121,7 @@ export const ProfileView: React.FC = () => {
             โปรไฟล์ของฉัน (My Profile)
           </h1>
           <p className="text-xs text-[#8A8994] dark:text-[#9795A7] mt-0.5">
-            จัดการรูปภาพ ข้อมูล และความสนใจของคุณใน NMR TUP
+            จัดการรูปภาพ ข้อมูล และความสนใจของคุณใน Spark
           </p>
         </div>
 

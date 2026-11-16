@@ -1,8 +1,8 @@
-# 🔥 Tinder NMR TUP
-### Premium Full-stack Social & Campus Matching Web Application
+# 🔥 Spark
+### Premium Full-stack Social Matching Web Application
 
 > **"Meet. Match. Connect."**  
-> เว็บแอปพลิเคชันค้นหาและเชื่อมต่อมิตรภาพสำหรับชาว **นวมินทราชินูทิศ เตรียมอุดมศึกษาพัฒนาการ (NMR TUP)** ออกแบบด้วยสถาปัตยกรรมระดับ Production-Ready ประสบการณ์ใช้งานลื่นไหลเสมือน Native Mobile App รองรับทั้งสมาร์ทโฟนและเดสก์ท็อป
+> เว็บแอปพลิเคชันค้นหาและเชื่อมต่อมิตรภาพ ออกแบบด้วยสถาปัตยกรรมระดับ Production-Ready ประสบการณ์ใช้งานลื่นไหลเสมือน Native Mobile App รองรับทั้งสมาร์ทโฟนและเดสก์ท็อป
 
 ---
 

@@ -147,13 +147,13 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete, onCa
 
       const newUser: UserProfile = {
         id: userId,
-        email: email.trim() || `${userId}@nmrtup.ac.th`,
+        email: email.trim() || `${userId}@spark.app`,
         display_name: displayName.trim(),
         birthdate,
         age,
         gender,
         school_department: department.trim(),
-        bio: bio.trim() || 'สวัสดีครับ/ค่ะ ยินดีที่ได้รู้จักทุกคนใน NMR TUP นะ!',
+        bio: bio.trim() || 'สวัสดีครับ/ค่ะ ยินดีที่ได้รู้จักทุกคนใน Spark นะ!',
         mode: 'CAMPUS_FRIENDS',
         is_verified: true,
         is_hidden: false,
@@ -228,7 +228,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete, onCa
                 สร้างบัญชีโปรไฟล์ใหม่ 📝
               </h2>
               <p className="text-xs text-[#8A8994] mt-1">
-                กรอกข้อมูลนักเรียนของคุณเพื่อเริ่มใช้งาน (จำเป็นต้องใส่ข้อมูลจริงเพื่อความปลอดภัย)
+                กรอกข้อมูลโปรไฟล์ของคุณเพื่อเริ่มใช้งาน (จำเป็นต้องใส่ข้อมูลจริงเพื่อความโปร่งใสและปลอดภัย)
               </p>
             </div>
 
@@ -259,7 +259,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete, onCa
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="student@nmrtup.ac.th (ถ้ามี)"
+                  placeholder="yourname@email.com (ถ้ามี)"
                   className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-[#201F2C] text-xs sm:text-sm text-[#20202A] dark:text-[#F4F3F9] focus:outline-none focus:border-[#FF526B]"
                 />
               </div>
@@ -575,7 +575,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete, onCa
       </div>
 
       <div className="text-center text-[11px] text-[#8A8994]">
-        Tinder NMR TUP • Safe Campus Social Platform
+        Spark • Safe Social Matching Platform
       </div>
     </div>
   );

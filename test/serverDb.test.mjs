@@ -5,7 +5,7 @@ import { serverDb } from '../src/lib/serverDb.ts';
 describe('Server Database & Real-time Chat Persistence Suite', () => {
   const testUserA = {
     id: `test-user-a-${Date.now()}`,
-    display_name: 'Ploy NMR',
+    display_name: 'Ploy',
     birthdate: '2008-05-10',
     age: 17,
     gender: 'female',
@@ -35,7 +35,7 @@ describe('Server Database & Real-time Chat Persistence Suite', () => {
   const testUserB = {
     ...testUserA,
     id: `test-user-b-${Date.now()}`,
-    display_name: 'Boss TUP',
+    display_name: 'Boss',
     gender: 'male',
     school_department: 'ศิลป์-คำนวณ',
     avatar_url: '/uploads/boss.jpg',
@@ -49,9 +49,9 @@ describe('Server Database & Real-time Chat Persistence Suite', () => {
     const fetchedB = serverDb.getUserById(testUserB.id);
 
     assert.ok(fetchedA, 'User A should exist in DB');
-    assert.equal(fetchedA.display_name, 'Ploy NMR');
+    assert.equal(fetchedA.display_name, 'Ploy');
     assert.ok(fetchedB, 'User B should exist in DB');
-    assert.equal(fetchedB.display_name, 'Boss TUP');
+    assert.equal(fetchedB.display_name, 'Boss');
   });
 
   test('2. Multi-user Mutual Swiping creates Match & Conversation', () => {

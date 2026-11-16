@@ -58,7 +58,7 @@ export const MatchCelebrationModal: React.FC<MatchCelebrationModalProps> = ({
           คุณและ {matchedUser.display_name}
         </h2>
         <p className="text-xs text-white/70 mt-1">
-          ต่างกดถูกใจกันและกันใน NMR TUP! ✨
+          ต่างกดถูกใจกันและกันใน Spark! ✨
         </p>
 
         {/* Dual Avatars with Heart Badge */}
