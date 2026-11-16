@@ -51,6 +51,8 @@ export interface UserProfile {
   is_suspended: boolean;
   is_banned: boolean;
   is_admin: boolean;
+  is_simulated?: boolean;
+  is_online?: boolean;
   avatar_url: string;
   photos: ProfilePhoto[];
   interests: Interest[];

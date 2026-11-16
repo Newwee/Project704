@@ -11,7 +11,6 @@ import {
   Flag,
   UserX,
   BadgeCheck,
-  GraduationCap,
   Info,
 } from 'lucide-react';
 import { UserProfile } from '@/types';
@@ -170,10 +169,20 @@ export const ChatView: React.FC<ChatViewProps> = ({ initialConversationId }) => 
 
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
-                        <span className="font-bold text-xs sm:text-sm text-[#20202A] dark:text-[#F4F3F9] truncate">
-                          {convo.other_user.display_name}
-                        </span>
-                        <span className="text-[10px] text-[#8A8994]">
+                        <div className="flex items-center gap-1.5 truncate">
+                          <span className="font-bold text-xs sm:text-sm text-[#20202A] dark:text-[#F4F3F9] truncate">
+                            {convo.other_user.display_name}
+                          </span>
+                          {(convo.other_user.is_simulated || convo.other_user.display_name === 'จอน') && (
+                            <span className="px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-500 text-white shrink-0">
+                              คนสมมุติ
+                            </span>
+                          )}
+                          <span className="text-[10px] text-emerald-500 font-semibold shrink-0">
+                            🟢 ออน
+                          </span>
+                        </div>
+                        <span className="text-[10px] text-[#8A8994] shrink-0">
                           {new Date(convo.last_message_at).toLocaleTimeString([], {
                             hour: '2-digit',
                             minute: '2-digit',
@@ -230,17 +239,23 @@ export const ChatView: React.FC<ChatViewProps> = ({ initialConversationId }) => 
                       />
                     </div>
                     <div>
-                      <div className="flex items-center gap-1.5">
-                        <span className="font-bold text-sm text-[#20202A] dark:text-[#F4F3F9]">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="font-bold text-sm sm:text-base text-[#20202A] dark:text-[#F4F3F9]">
                           {otherUser.display_name}
                         </span>
                         {otherUser.is_verified && (
                           <BadgeCheck className="w-4 h-4 text-[#20D994] fill-[#20D994] text-white" />
                         )}
+                        {(otherUser.is_simulated || otherUser.display_name === 'จอน') && (
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500 text-white shadow-xs">
+                            🤖 คนสมมุติ: จอน
+                          </span>
+                        )}
                       </div>
-                      <div className="flex items-center gap-1 text-[11px] text-[#8A8994]">
-                        <GraduationCap className="w-3 h-3 text-[#FF7A85]" />
-                        <span>{otherUser.school_department || 'Member'}</span>
+                      <div className="flex items-center gap-1.5 text-[11px] text-emerald-600 dark:text-emerald-400 font-medium mt-0.5">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                        <span>ออนอยู่ (Online)</span>
+                        <span className="text-[#8A8994] dark:text-[#9795A7]">• {otherUser.school_department || 'Member'}</span>
                       </div>
                     </div>
                   </div>

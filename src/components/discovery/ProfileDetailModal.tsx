@@ -100,12 +100,21 @@ export const ProfileDetailModal: React.FC<ProfileDetailModalProps> = ({
           <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-black/80 via-black/40 to-transparent pointer-events-none" />
 
           <div className="absolute bottom-4 left-5 right-5 text-white pointer-events-none">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <h2 className="text-2xl font-black">{profile.display_name}</h2>
               {profile.age && <span className="text-2xl font-normal opacity-90">{profile.age}</span>}
               {profile.is_verified && (
                 <BadgeCheck className="w-6 h-6 text-[#20D994] fill-[#20D994] text-white" />
               )}
+              {(profile.is_simulated || profile.display_name === 'จอน') && (
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-500 text-white shadow-sm">
+                  🤖 คนสมมุติ: จอน (Simulated Profile)
+                </span>
+              )}
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500 text-white shadow-sm flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
+                ออน
+              </span>
             </div>
             <div className="flex items-center gap-2 text-xs text-white/80 mt-1">
               <GraduationCap className="w-4 h-4 text-[#FF7A85]" />

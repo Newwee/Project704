@@ -96,7 +96,18 @@ export const SwipeDeck: React.FC = () => {
             />
             <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-black/85 via-black/40 to-transparent" />
             <div className="absolute bottom-5 left-5 right-5 text-white">
-              <h3 className="text-xl font-bold">{nextProfile.display_name}, {nextProfile.age}</h3>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="text-xl font-bold">{nextProfile.display_name}, {nextProfile.age}</h3>
+                {(nextProfile.is_simulated || nextProfile.display_name === 'จอน') && (
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500 text-white shadow-sm">
+                    คนสมมุติ: จอน
+                  </span>
+                )}
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/90 text-white backdrop-blur-md flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                  ออน
+                </span>
+              </div>
               <p className="text-xs text-white/80">{nextProfile.school_department}</p>
             </div>
           </div>
@@ -171,7 +182,7 @@ export const SwipeDeck: React.FC = () => {
                 <div className="absolute bottom-4 left-5 right-5 text-white z-20 flex flex-col gap-2">
                   <div className="flex items-center justify-between">
                     <div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <h2 className="text-2xl sm:text-3xl font-black drop-shadow">
                           {activeProfile.display_name}
                         </h2>
@@ -183,6 +194,15 @@ export const SwipeDeck: React.FC = () => {
                         {activeProfile.is_verified && (
                           <BadgeCheck className="w-6 h-6 text-[#20D994] fill-[#20D994] text-white shrink-0 drop-shadow" />
                         )}
+                        {(activeProfile.is_simulated || activeProfile.display_name === 'จอน') && (
+                          <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-500/90 text-white backdrop-blur-md shadow-sm border border-amber-300/40">
+                            🤖 คนสมมุติ: จอน
+                          </span>
+                        )}
+                        <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/90 text-white backdrop-blur-md shadow-sm flex items-center gap-1 border border-emerald-300/40">
+                          <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
+                          ออน
+                        </span>
                       </div>
 
                       <div className="flex items-center gap-1.5 text-xs text-white/85 font-medium mt-0.5">

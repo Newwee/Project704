@@ -100,4 +100,26 @@ describe('Server Database & Real-time Chat Persistence Suite', () => {
     const convosAfter = serverDb.getConversations(testUserA.id);
     assert.equal(convosAfter.some((c) => c.match_id === activeConvo.match_id), false);
   });
+
+  test('5. Simulated User "John" (จอน) auto-matches and auto-replies in chat', () => {
+    const john = serverDb.getUserById('user-simulated-john');
+    assert.ok(john, 'Simulated John must exist in DB');
+    assert.equal(john.display_name, 'จอน');
+    assert.equal(john.is_simulated, true);
+
+    // Any user swiping like on John gets instant mutual match
+    const swipeOnJohn = serverDb.recordSwipe(testUserA.id, 'user-simulated-john', 'like');
+    assert.equal(swipeOnJohn.isMatch, true, 'Swiping on John should create immediate match');
+    assert.ok(swipeOnJohn.match);
+    assert.ok(swipeOnJohn.conversation);
+
+    // Sending a message to John automatically triggers John reply
+    const sentMsg = serverDb.sendMessage(swipeOnJohn.conversation.id, testUserA.id, 'สวัสดีจอน!');
+    assert.equal(sentMsg.text, 'สวัสดีจอน!');
+
+    const chatMsgs = serverDb.getMessages(swipeOnJohn.conversation.id);
+    const lastMsg = chatMsgs[chatMsgs.length - 1];
+    assert.ok(lastMsg.text.includes('จอน'), 'John auto-reply must mention จอน');
+    assert.equal(lastMsg.sender_id, 'user-simulated-john');
+  });
 });

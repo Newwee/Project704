@@ -17,7 +17,7 @@ interface MobileNavBarProps {
 }
 
 const glyph = (icon: React.ComponentProps<typeof HugeiconsIcon>['icon']) => (
-  <HugeiconsIcon icon={icon} size="1.4em" strokeWidth={1.8} />
+  <HugeiconsIcon icon={icon} size="1.6em" strokeWidth={1.9} />
 );
 
 export const MobileNavBar: React.FC<MobileNavBarProps> = ({
@@ -91,16 +91,16 @@ export const MobileNavBar: React.FC<MobileNavBarProps> = ({
   ];
 
   return (
-    <div className="fixed bottom-3 inset-x-0 z-40 flex justify-center pointer-events-none select-none px-4">
+    <div className="fixed bottom-4 pb-[env(safe-area-inset-bottom,4px)] inset-x-0 z-40 flex justify-center pointer-events-none select-none px-3">
       <div className="relative pointer-events-auto">
         <Dock
           items={items}
           theme={isDark ? 'dark' : 'light'}
-          baseItemSize={48}
-          magnification={66}
-          panelHeight={66}
+          baseItemSize={58}
+          magnification={78}
+          panelHeight={76}
           roundness={0.7}
-          gap={10}
+          gap={12}
           badgeColor="#FF526B"
           accentColor="#FF526B"
           className="shadow-2xl border border-white/40 dark:border-white/10"

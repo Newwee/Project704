@@ -23,5 +23,58 @@ export const MASTER_INTERESTS: Interest[] = [
   { id: 'int-20', name: 'Astronomy & Physics', category: 'Science', icon: '🔭' },
 ];
 
-// Clean slate: 0 mock profiles as requested by user
-export const INITIAL_PROFILES: UserProfile[] = [];
+// Simulated profile: John ("จอน" - โปรไฟล์คนสมมุติสำหรับทดสอบระบบ)
+export const SIMULATED_USER_JOHN: UserProfile = {
+  id: 'user-simulated-john',
+  display_name: 'จอน',
+  birthdate: '2006-08-15',
+  age: 19,
+  gender: 'male',
+  school_department: 'คนสมมุติ / ทดสอบระบบ',
+  bio: 'สวัสดีครับ! ผมชื่อ "จอน" เป็นโปรไฟล์คนสมมุติสำหรับทดสอบระบบจับคู่และแชท (Simulated Profile) ลองปัดไลก์แล้วมาคุยกันได้เลยครับ!',
+  mode: 'CAMPUS_FRIENDS',
+  is_verified: true,
+  is_hidden: false,
+  is_suspended: false,
+  is_banned: false,
+  is_admin: false,
+  is_simulated: true,
+  is_online: true,
+  avatar_url: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=800&q=80',
+  photos: [
+    {
+      id: 'john-p1',
+      user_id: 'user-simulated-john',
+      url: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=800&q=80',
+      order_index: 0,
+      is_primary: true,
+    },
+    {
+      id: 'john-p2',
+      user_id: 'user-simulated-john',
+      url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80',
+      order_index: 1,
+      is_primary: false,
+    },
+  ],
+  interests: [
+    { id: 'int-1', name: 'Coding & Tech', category: 'Technology', icon: '💻' },
+    { id: 'int-2', name: 'AI & Robotics', category: 'Technology', icon: '🤖' },
+    { id: 'int-6', name: 'Indie Rock', category: 'Music', icon: '🎸' },
+    { id: 'int-15', name: 'Specialty Coffee', category: 'Food', icon: '☕' },
+  ],
+  preferences: {
+    preferred_gender: 'all',
+    min_age: 16,
+    max_age: 30,
+    campus_filter: 'all',
+    notifications_enabled: true,
+    discovery_active: true,
+  },
+  created_at: '2026-01-01T00:00:00.000Z',
+  updated_at: '2026-01-01T00:00:00.000Z',
+  compatibility_score: 98,
+};
+
+// Clean slate: Simulated John profile is available for testing
+export const INITIAL_PROFILES: UserProfile[] = [SIMULATED_USER_JOHN];

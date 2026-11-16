@@ -24,8 +24,60 @@ export interface DbData {
 const DB_DIR = path.join(process.cwd(), 'data');
 const DB_FILE = path.join(DB_DIR, 'db.json');
 
+export const SIMULATED_USER_JOHN: UserProfile = {
+  id: 'user-simulated-john',
+  display_name: 'จอน',
+  birthdate: '2006-08-15',
+  age: 19,
+  gender: 'male',
+  school_department: 'คนสมมุติ / ทดสอบระบบ',
+  bio: 'สวัสดีครับ! ผมชื่อ "จอน" เป็นโปรไฟล์คนสมมุติสำหรับทดสอบระบบจับคู่และแชท (Simulated Profile) ลองปัดไลก์แล้วมาคุยกันได้เลยครับ!',
+  mode: 'CAMPUS_FRIENDS',
+  is_verified: true,
+  is_hidden: false,
+  is_suspended: false,
+  is_banned: false,
+  is_admin: false,
+  is_simulated: true,
+  is_online: true,
+  avatar_url: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=800&q=80',
+  photos: [
+    {
+      id: 'john-p1',
+      user_id: 'user-simulated-john',
+      url: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=800&q=80',
+      order_index: 0,
+      is_primary: true,
+    },
+    {
+      id: 'john-p2',
+      user_id: 'user-simulated-john',
+      url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80',
+      order_index: 1,
+      is_primary: false,
+    },
+  ],
+  interests: [
+    { id: 'int-1', name: 'Coding & Tech', category: 'Technology', icon: '💻' },
+    { id: 'int-2', name: 'AI & Robotics', category: 'Technology', icon: '🤖' },
+    { id: 'int-6', name: 'Indie Rock', category: 'Music', icon: '🎸' },
+    { id: 'int-15', name: 'Specialty Coffee', category: 'Food', icon: '☕' },
+  ],
+  preferences: {
+    preferred_gender: 'all',
+    min_age: 16,
+    max_age: 30,
+    campus_filter: 'all',
+    notifications_enabled: true,
+    discovery_active: true,
+  },
+  created_at: '2026-01-01T00:00:00.000Z',
+  updated_at: '2026-01-01T00:00:00.000Z',
+  compatibility_score: 98,
+};
+
 const defaultDb: DbData = {
-  users: [],
+  users: [SIMULATED_USER_JOHN],
   swipes: {},
   matches: [],
   conversations: [],
@@ -50,8 +102,13 @@ function ensureDb(): DbData {
       return defaultDb;
     }
     const parsed = JSON.parse(raw);
+    const usersList: UserProfile[] = Array.isArray(parsed.users) ? parsed.users : [];
+    if (!usersList.some((u) => u.id === 'user-simulated-john' || u.is_simulated || u.display_name === 'จอน')) {
+      usersList.push(SIMULATED_USER_JOHN);
+    }
+
     return {
-      users: Array.isArray(parsed.users) ? parsed.users : [],
+      users: usersList,
       swipes: parsed.swipes && typeof parsed.swipes === 'object' ? parsed.swipes : {},
       matches: Array.isArray(parsed.matches) ? parsed.matches : [],
       conversations: Array.isArray(parsed.conversations) ? parsed.conversations : [],
@@ -147,6 +204,15 @@ export const serverDb = {
 
     if (fromUser && toUser && (action === 'like' || action === 'superlike')) {
       const reciprocalKey = `${toUserId}->${fromUserId}`;
+      const isSimulatedJohn =
+        Boolean(toUser.is_simulated) ||
+        toUserId === 'user-simulated-john' ||
+        toUser.display_name === 'จอน';
+
+      if (isSimulatedJohn) {
+        db.swipes[reciprocalKey] = 'like';
+      }
+
       const reciprocalAction = db.swipes[reciprocalKey];
 
       if (reciprocalAction === 'like' || reciprocalAction === 'superlike') {
@@ -269,6 +335,37 @@ export const serverDb = {
     if (convoIndex >= 0) {
       db.conversations[convoIndex].last_message_text = text || 'Sent an image';
       db.conversations[convoIndex].last_message_at = now;
+    }
+
+    // Auto-reply if conversation is with simulated John
+    const convo = db.conversations.find((c) => c.id === conversationId);
+    if (convo) {
+      const match = db.matches.find((m) => m.id === convo.match_id);
+      if (match) {
+        const otherId = match.user1_id === senderId ? match.user2_id : match.user1_id;
+        const otherUser = db.users.find((u) => u.id === otherId);
+        if (
+          otherUser &&
+          (otherUser.id === 'user-simulated-john' ||
+            Boolean(otherUser.is_simulated) ||
+            otherUser.display_name === 'จอน')
+        ) {
+          const replyTime = new Date(Date.now() + 500).toISOString();
+          const replyMsg: MessageItem = {
+            id: `msg-john-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+            conversation_id: conversationId,
+            sender_id: otherUser.id,
+            text: `สวัสดีครับ! ผมจอน (คนสมมุติ) ได้รับข้อความ: "${text}" เรียบร้อยแล้ว ระบบแชททำงานสมบูรณ์ 100%! 🎉`,
+            created_at: replyTime,
+            is_read: false,
+          };
+          db.messages[conversationId].push(replyMsg);
+          if (convoIndex >= 0) {
+            db.conversations[convoIndex].last_message_text = replyMsg.text;
+            db.conversations[convoIndex].last_message_at = replyTime;
+          }
+        }
+      }
     }
 
     saveDb(db);

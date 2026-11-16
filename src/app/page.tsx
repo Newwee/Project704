@@ -74,7 +74,7 @@ export default function Home() {
         />
 
         {/* Central Content Canvas */}
-        <main className="flex-1 pb-20 lg:pb-6 overflow-y-auto">
+        <main className="flex-1 pb-28 lg:pb-6 overflow-y-auto">
           {currentTab === 'discover' && (
             <div className="py-4 sm:py-6 px-3">
               <SwipeDeck />

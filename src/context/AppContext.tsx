@@ -471,7 +471,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     // 1. Check local reciprocal like for instant feedback
     const reciprocalKey = `${targetUserId}->${currentUser.id}`;
-    const reciprocalAction = swipes[reciprocalKey];
+    const isSimulatedTarget =
+      Boolean(targetUser.is_simulated) ||
+      targetUserId === 'user-simulated-john' ||
+      targetUser.display_name === 'จอน';
+
+    if (isSimulatedTarget) {
+      setSwipes((prev) => ({ ...prev, [reciprocalKey]: 'like' }));
+    }
+
+    const reciprocalAction = isSimulatedTarget ? 'like' : swipes[reciprocalKey];
     let isMatch = false;
     let matchObj: MatchItem | undefined;
 
@@ -576,70 +585,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setLatestMatchCelebration(null);
   };
 
-  // Real Chat message saving & history persistence
-  const sendMessage = async (conversationId: string, text: string, imageUrl?: string) => {
-    if (!currentUser || (!text.trim() && !imageUrl)) return;
-
-    const tempId = `msg-${Date.now()}`;
-    const now = new Date().toISOString();
-    const newMsg: MessageItem = {
-      id: tempId,
-      conversation_id: conversationId,
-      sender_id: currentUser.id,
-      text: text.trim(),
-      image_url: imageUrl,
-      is_read: true,
-      created_at: now,
-    };
-
-    // Optimistic local update
-    setMessages((prev) => ({
-      ...prev,
-      [conversationId]: [...(prev[conversationId] || []), newMsg],
-    }));
-
-    // Update conversation last message & timestamp
-    setConversations((prev) =>
-      prev.map((c) =>
-        c.id === conversationId
-          ? {
-              ...c,
-              last_message_text: text.trim() || 'Sent an image',
-              last_message_at: now,
-            }
-          : c
-      )
-    );
-
-    // Save to server database
-    try {
-      const res = await fetch('/api/messages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          conversationId,
-          senderId: currentUser.id,
-          text: text.trim(),
-          imageUrl,
-        }),
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        if (data.message) {
-          setMessages((prev) => ({
-            ...prev,
-            [conversationId]: (prev[conversationId] || []).map((m) =>
-              m.id === tempId ? data.message : m
-            ),
-          }));
-        }
-      }
-    } catch (err) {
-      console.warn('Send message server error:', err);
-    }
-  };
-
   const fetchMessages = useCallback(async (conversationId: string) => {
     if (!conversationId) return;
     try {
@@ -657,6 +602,77 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       console.warn('Fetch messages error:', err);
     }
   }, []);
+
+  // Real Chat message saving & history persistence
+  const sendMessage = useCallback(
+    async (conversationId: string, text: string, imageUrl?: string) => {
+      if (!currentUser || (!text.trim() && !imageUrl)) return;
+
+      const tempId = `msg-${Date.now()}`;
+      const now = new Date().toISOString();
+      const newMsg: MessageItem = {
+        id: tempId,
+        conversation_id: conversationId,
+        sender_id: currentUser.id,
+        text: text.trim(),
+        image_url: imageUrl,
+        is_read: true,
+        created_at: now,
+      };
+
+      // Optimistic local update
+      setMessages((prev) => ({
+        ...prev,
+        [conversationId]: [...(prev[conversationId] || []), newMsg],
+      }));
+
+      // Update conversation last message & timestamp
+      setConversations((prev) =>
+        prev.map((c) =>
+          c.id === conversationId
+            ? {
+                ...c,
+                last_message_text: text.trim() || 'Sent an image',
+                last_message_at: now,
+              }
+            : c
+        )
+      );
+
+      // Save to server database
+      try {
+        const res = await fetch('/api/messages', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            conversationId,
+            senderId: currentUser.id,
+            text: text.trim(),
+            imageUrl,
+          }),
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          if (data.message) {
+            setMessages((prev) => ({
+              ...prev,
+              [conversationId]: (prev[conversationId] || []).map((m) =>
+                m.id === tempId ? data.message : m
+              ),
+            }));
+          }
+          // Fetch to immediately pick up automated reply from simulated John
+          setTimeout(() => {
+            fetchMessages(conversationId);
+          }, 600);
+        }
+      } catch (err) {
+        console.warn('Send message server error:', err);
+      }
+    },
+    [currentUser, fetchMessages]
+  );
 
   const unmatch = async (matchId: string) => {
     setMatches((prev) => prev.filter((m) => m.id !== matchId));

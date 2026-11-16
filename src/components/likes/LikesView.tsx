@@ -94,12 +94,20 @@ export const LikesView: React.FC = () => {
                 <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/85 via-black/40 to-transparent pointer-events-none" />
 
                 <div className="absolute bottom-2.5 left-3 right-3 text-white pointer-events-none">
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-1.5 flex-wrap">
                     <h3 className="font-bold text-sm truncate">{user.display_name}</h3>
                     {user.age && <span className="text-xs opacity-90">{user.age}</span>}
                     {user.is_verified && (
                       <BadgeCheck className="w-4 h-4 text-[#20D994] fill-[#20D994] text-white shrink-0" />
                     )}
+                    {(user.is_simulated || user.display_name === 'จอน') && (
+                      <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-500 text-white shrink-0">
+                        คนสมมุติ
+                      </span>
+                    )}
+                    <span className="text-[10px] text-emerald-400 font-bold shrink-0">
+                      🟢 ออน
+                    </span>
                   </div>
                   <div className="flex items-center gap-1 text-[11px] text-white/80 truncate mt-0.5">
                     <GraduationCap className="w-3 h-3 text-[#FF7A85]" />

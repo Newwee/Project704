@@ -220,8 +220,8 @@
 
 .dock-dot {
   position: absolute;
-  width: 4px;
-  height: 4px;
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
   background: var(--dock-dot);
   pointer-events: none;
@@ -230,7 +230,7 @@
 .dock--bottom .dock-dot,
 .dock--top .dock-dot {
   left: 50%;
-  margin-left: -2px;
+  margin-left: -2.5px;
 }
 
 .dock--left .dock-dot,
