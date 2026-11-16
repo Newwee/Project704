@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "node --test test/app.test.mjs"
+    "test": "node --test test/app.test.mjs test/serverDb.test.mjs"
   },
   "dependencies": {
     "@hugeicons/core-free-icons": "^4.4.0",

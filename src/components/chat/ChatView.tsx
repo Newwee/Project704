@@ -29,6 +29,7 @@ export const ChatView: React.FC<ChatViewProps> = ({ initialConversationId }) => 
     conversations,
     messages,
     sendMessage,
+    fetchMessages,
     unmatch,
     blockUser,
     currentUser,
@@ -51,6 +52,18 @@ export const ChatView: React.FC<ChatViewProps> = ({ initialConversationId }) => 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, activeConvoId]);
+
+  // Fast polling for active conversation to give instant real-time chat feel
+  useEffect(() => {
+    if (!activeConvoId) return;
+    fetchMessages(activeConvoId);
+
+    const interval = setInterval(() => {
+      fetchMessages(activeConvoId);
+    }, 1500);
+
+    return () => clearInterval(interval);
+  }, [activeConvoId, fetchMessages]);
 
   const activeConvo = conversations.find((c) => c.id === activeConvoId);
   const activeMessages = activeConvoId ? messages[activeConvoId] || [] : [];

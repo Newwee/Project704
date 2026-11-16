@@ -17,6 +17,7 @@ import {
 import { MASTER_INTERESTS } from '@/data/seedData';
 import { Gender, ProfilePhoto, UserProfile } from '@/types';
 import { Logo } from '../common/Logo';
+import { compressImage } from '@/lib/imageOptimizer';
 
 interface OnboardingFlowProps {
   onComplete: () => void;
@@ -37,10 +38,12 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete, onCa
   const [selectedInterests, setSelectedInterests] = useState<typeof MASTER_INTERESTS>([]);
   const [preferredGender, setPreferredGender] = useState<'all' | 'male' | 'female' | 'non-binary'>('all');
   const [errorMsg, setErrorMsg] = useState('');
+  const [isCompressing, setIsCompressing] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const totalSteps = 5;
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -48,25 +51,44 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete, onCa
       setErrorMsg('กรุณาเลือกไฟล์รูปภาพที่ถูกต้อง (JPEG, PNG, WebP)');
       return;
     }
-    if (file.size > 5 * 1024 * 1024) {
-      setErrorMsg('ขนาดไฟล์รูปภาพต้องไม่เกิน 5MB');
-      return;
-    }
 
     setErrorMsg('');
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = reader.result as string;
+    setIsCompressing(true);
+
+    try {
+      // Compress with Canvas to max 720px and quality 0.75 (~35KB)
+      const compressedDataUrl = await compressImage(file, 720, 720, 0.75);
+
+      // Attempt server upload for clean /uploads/ URL, fallback to compressedDataUrl
+      let finalUrl = compressedDataUrl;
+      try {
+        const res = await fetch('/api/upload', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ dataUrl: compressedDataUrl }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.url) finalUrl = data.url;
+        }
+      } catch (uploadErr) {
+        console.warn('API upload fallback:', uploadErr);
+      }
+
       const newPhoto: ProfilePhoto = {
-        id: `photo-${Date.now()}`,
+        id: `photo-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
         user_id: 'new-user',
-        url: result,
+        url: finalUrl,
         order_index: photos.length,
         is_primary: photos.length === 0,
       };
-      setPhotos([...photos, newPhoto]);
-    };
-    reader.readAsDataURL(file);
+      setPhotos((prev) => [...prev, newPhoto]);
+    } catch (err) {
+      console.error('Image compression error:', err);
+      setErrorMsg('เกิดข้อผิดพลาดในการประมวลผลรูปภาพ กรุณาลองใหม่อีกครั้ง');
+    } finally {
+      setIsCompressing(false);
+    }
   };
 
   const handleInterestToggle = (interest: typeof MASTER_INTERESTS[0]) => {
@@ -109,48 +131,58 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete, onCa
     }
   };
 
-  const handleFinalSubmit = () => {
+  const handleFinalSubmit = async () => {
     if (photos.length === 0 || !displayName.trim()) {
       setErrorMsg('กรุณากรอกข้อมูลและอัปโหลดรูปภาพให้ครบถ้วน');
       return;
     }
 
-    const birthYear = new Date(birthdate).getFullYear();
-    const age = Math.max(15, new Date().getFullYear() - birthYear);
-    const userId = `user-${Date.now()}`;
+    setIsSubmitting(true);
+    setErrorMsg('');
 
-    const newUser: UserProfile = {
-      id: userId,
-      email: email.trim() || `${userId}@nmrtup.ac.th`,
-      display_name: displayName.trim(),
-      birthdate,
-      age,
-      gender,
-      school_department: department.trim(),
-      bio: bio.trim() || 'สวัสดีครับ/ค่ะ ยินดีที่ได้รู้จักทุกคนใน NMR TUP นะ!',
-      mode: 'CAMPUS_FRIENDS',
-      is_verified: true,
-      is_hidden: false,
-      is_suspended: false,
-      is_banned: false,
-      is_admin: false,
-      avatar_url: photos[0].url,
-      photos: photos.map((p, idx) => ({ ...p, user_id: userId, order_index: idx })),
-      interests: selectedInterests,
-      preferences: {
-        preferred_gender: preferredGender,
-        min_age: 16,
-        max_age: 19,
-        campus_filter: 'all',
-        notifications_enabled: true,
-        discovery_active: true,
-      },
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
+    try {
+      const birthYear = new Date(birthdate).getFullYear();
+      const age = Math.max(15, new Date().getFullYear() - birthYear);
+      const userId = `user-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
 
-    registerUser(newUser);
-    onComplete();
+      const newUser: UserProfile = {
+        id: userId,
+        email: email.trim() || `${userId}@nmrtup.ac.th`,
+        display_name: displayName.trim(),
+        birthdate,
+        age,
+        gender,
+        school_department: department.trim(),
+        bio: bio.trim() || 'สวัสดีครับ/ค่ะ ยินดีที่ได้รู้จักทุกคนใน NMR TUP นะ!',
+        mode: 'CAMPUS_FRIENDS',
+        is_verified: true,
+        is_hidden: false,
+        is_suspended: false,
+        is_banned: false,
+        is_admin: false,
+        avatar_url: photos[0].url,
+        photos: photos.map((p, idx) => ({ ...p, user_id: userId, order_index: idx })),
+        interests: selectedInterests,
+        preferences: {
+          preferred_gender: preferredGender,
+          min_age: 16,
+          max_age: 19,
+          campus_filter: 'all',
+          notifications_enabled: true,
+          discovery_active: true,
+        },
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      await registerUser(newUser);
+      onComplete();
+    } catch (err) {
+      console.error('Registration finish error:', err);
+      setErrorMsg('เกิดข้อผิดพลาดในการบันทึกข้อมูล กรุณาลองใหม่อีกครั้ง');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -328,15 +360,28 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete, onCa
               ))}
 
               {photos.length < 6 && (
-                <label className="h-36 rounded-2xl border-2 border-dashed border-[#FF526B]/50 hover:border-[#FF526B] bg-[#FFF8FA] dark:bg-[#201F2C] flex flex-col items-center justify-center gap-2 cursor-pointer transition">
+                <label className={`h-36 rounded-2xl border-2 border-dashed border-[#FF526B]/50 hover:border-[#FF526B] bg-[#FFF8FA] dark:bg-[#201F2C] flex flex-col items-center justify-center gap-2 transition ${isCompressing ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>
                   <div className="w-10 h-10 rounded-full bg-[#FFEBF0] dark:bg-[#2B1822] text-[#FF526B] flex items-center justify-center shadow-xs">
                     <Plus className="w-5 h-5" />
                   </div>
                   <span className="text-xs font-bold text-[#FF526B]">เลือกรูปภาพ</span>
-                  <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+                  <input
+                    type="file"
+                    accept="image/*"
+                    disabled={isCompressing}
+                    onChange={handleImageUpload}
+                    className="hidden"
+                  />
                 </label>
               )}
             </div>
+
+            {isCompressing && (
+              <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 text-xs font-semibold flex items-center justify-center gap-2">
+                <div className="w-4 h-4 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
+                <span>กำลังปรับขนาดรูปภาพให้เหมาะสม...</span>
+              </div>
+            )}
 
             {photos.length > 0 && (
               <p className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
@@ -499,8 +544,9 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete, onCa
           {step < totalSteps ? (
             <button
               type="button"
+              disabled={isCompressing}
               onClick={handleNextStep}
-              className="px-6 py-2.5 rounded-xl bg-gradient-brand text-white font-bold text-xs shadow-brand hover:opacity-95 flex items-center gap-1.5 transition"
+              className="px-6 py-2.5 rounded-xl bg-gradient-brand text-white font-bold text-xs shadow-brand hover:opacity-95 flex items-center gap-1.5 transition disabled:opacity-50"
             >
               ถัดไป
               <ChevronRight className="w-4 h-4" />
@@ -508,11 +554,21 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete, onCa
           ) : (
             <button
               type="button"
+              disabled={isSubmitting || isCompressing}
               onClick={handleFinalSubmit}
-              className="px-6 py-2.5 rounded-xl bg-gradient-brand text-white font-bold text-xs shadow-brand hover:opacity-95 flex items-center gap-1.5 transition"
+              className="px-6 py-2.5 rounded-xl bg-gradient-brand text-white font-bold text-xs shadow-brand hover:opacity-95 flex items-center gap-1.5 transition disabled:opacity-50"
             >
-              <Check className="w-4 h-4" />
-              สร้างบัญชีและเริ่มใช้งาน
+              {isSubmitting ? (
+                <>
+                  <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span>กำลังบันทึกข้อมูล...</span>
+                </>
+              ) : (
+                <>
+                  <Check className="w-4 h-4" />
+                  <span>สร้างบัญชีและเริ่มใช้งาน</span>
+                </>
+              )}
             </button>
           )}
         </div>
